@@ -1,0 +1,288 @@
+[
+  {
+    "name": "OracleForge - Scout Cycle (every 4h)",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              {
+                "field": "hours",
+                "hoursInterval": 4
+              }
+            ]
+          }
+        },
+        "id": "trigger-scout-cycle",
+        "name": "Every 4 Hours",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [0, 0]
+      },
+      {
+        "parameters": {
+          "command": "python main.py --run-scout",
+          "cwd": "/data/oracleforge"
+        },
+        "id": "exec-scout",
+        "name": "Run Scout",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [200, 0]
+      },
+      {
+        "parameters": {
+          "command": "python main.py --run-brain --mode analysis",
+          "cwd": "/data/oracleforge"
+        },
+        "id": "exec-brain",
+        "name": "Run Brain",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [400, 0]
+      },
+      {
+        "parameters": {
+          "command": "python main.py --run-chronicle --chronicle-mode archive",
+          "cwd": "/data/oracleforge"
+        },
+        "id": "exec-chronicle",
+        "name": "Run Chronicler",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [600, 0]
+      }
+    ],
+    "connections": {
+      "Every 4 Hours": {
+        "main": [[{ "node": "Run Scout", "type": "main", "index": 0 }]]
+      },
+      "Run Scout": {
+        "main": [[{ "node": "Run Brain", "type": "main", "index": 0 }]]
+      },
+      "Run Brain": {
+        "main": [[{ "node": "Run Chronicler", "type": "main", "index": 0 }]]
+      }
+    },
+    "settings": { "executionOrder": "v1" }
+  },
+  {
+    "name": "OracleForge - Radar Posts (3x daily)",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              { "field": "hours", "hoursInterval": 1 },
+              { "field": "triggerAtHour", "triggerAtHour": 9 },
+              { "field": "triggerAtMinute", "triggerAtMinute": 0 }
+            ]
+          }
+        },
+        "id": "trigger-radar-1",
+        "name": "09:00 UTC",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [0, 0]
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              { "field": "hours", "hoursInterval": 1 },
+              { "field": "triggerAtHour", "triggerAtHour": 16 },
+              { "field": "triggerAtMinute", "triggerAtMinute": 0 }
+            ]
+          }
+        },
+        "id": "trigger-radar-2",
+        "name": "16:00 UTC",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [0, 200]
+      },
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              { "field": "hours", "hoursInterval": 1 },
+              { "field": "triggerAtHour", "triggerAtHour": 22 },
+              { "field": "triggerAtMinute", "triggerAtMinute": 0 }
+            ]
+          }
+        },
+        "id": "trigger-radar-3",
+        "name": "22:00 UTC",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [0, 400]
+      },
+      {
+        "parameters": {
+          "command": "python main.py --run-social --platform twitter --social-mode radar_posts --dry-run",
+          "cwd": "/data/oracleforge"
+        },
+        "id": "exec-radar",
+        "name": "Post Radar",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [200, 200]
+      }
+    ],
+    "connections": {
+      "09:00 UTC": { "main": [[{ "node": "Post Radar", "type": "main", "index": 0 }]] },
+      "16:00 UTC": { "main": [[{ "node": "Post Radar", "type": "main", "index": 0 }]] },
+      "22:00 UTC": { "main": [[{ "node": "Post Radar", "type": "main", "index": 0 }]] }
+    },
+    "settings": { "executionOrder": "v1" }
+  },
+  {
+    "name": "OracleForge - Mention Replies (every 2h)",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              { "field": "hours", "hoursInterval": 2 }
+            ]
+          }
+        },
+        "id": "trigger-replies",
+        "name": "Every 2 Hours",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [0, 0]
+      },
+      {
+        "parameters": {
+          "command": "python main.py --run-social --platform twitter --social-mode replies --dry-run",
+          "cwd": "/data/oracleforge"
+        },
+        "id": "exec-replies",
+        "name": "Reply to Mentions",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [200, 0]
+      }
+    ],
+    "connections": {
+      "Every 2 Hours": {
+        "main": [[{ "node": "Reply to Mentions", "type": "main", "index": 0 }]]
+      }
+    },
+    "settings": { "executionOrder": "v1" }
+  },
+  {
+    "name": "OracleForge - Weekly Newsletter (Fri 10:00)",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              { "field": "days", "daysInterval": 1 },
+              { "field": "triggerAtHour", "triggerAtHour": 10 },
+              { "field": "triggerAtMinute", "triggerAtMinute": 0 },
+              { "field": "triggerAtDay", "triggerAtDay": [5] }
+            ]
+          }
+        },
+        "id": "trigger-newsletter",
+        "name": "Friday 10:00 UTC",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [0, 0]
+      },
+      {
+        "parameters": {
+          "command": "python main.py --run-brain --mode newsletter",
+          "cwd": "/data/oracleforge"
+        },
+        "id": "exec-newsletter",
+        "name": "Generate Newsletter",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [200, 0]
+      }
+    ],
+    "connections": {
+      "Friday 10:00 UTC": {
+        "main": [[{ "node": "Generate Newsletter", "type": "main", "index": 0 }]]
+      }
+    },
+    "settings": { "executionOrder": "v1" }
+  },
+  {
+    "name": "OracleForge - Weekly Report (Sun 18:00)",
+    "nodes": [
+      {
+        "parameters": {
+          "rule": {
+            "interval": [
+              { "field": "days", "daysInterval": 1 },
+              { "field": "triggerAtHour", "triggerAtHour": 18 },
+              { "field": "triggerAtMinute", "triggerAtMinute": 0 },
+              { "field": "triggerAtDay", "triggerAtDay": [0] }
+            ]
+          }
+        },
+        "id": "trigger-report",
+        "name": "Sunday 18:00 UTC",
+        "type": "n8n-nodes-base.scheduleTrigger",
+        "typeVersion": 1.2,
+        "position": [0, 0]
+      },
+      {
+        "parameters": {
+          "command": "python main.py --run-chronicle --chronicle-mode report",
+          "cwd": "/data/oracleforge"
+        },
+        "id": "exec-report",
+        "name": "Generate Report",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [200, 0]
+      }
+    ],
+    "connections": {
+      "Sunday 18:00 UTC": {
+        "main": [[{ "node": "Generate Report", "type": "main", "index": 0 }]]
+      }
+    },
+    "settings": { "executionOrder": "v1" }
+  },
+  {
+    "name": "OracleForge - On-Demand Image (Webhook)",
+    "nodes": [
+      {
+        "parameters": {
+          "httpMethod": "POST",
+          "path": "forge-image",
+          "responseMode": "onReceived"
+        },
+        "id": "trigger-webhook",
+        "name": "Webhook /forge-image",
+        "type": "n8n-nodes-base.webhook",
+        "typeVersion": 1.2,
+        "position": [0, 0],
+        "webhookId": "oracleforge-forge-image"
+      },
+      {
+        "parameters": {
+          "command": "python main.py --run-forge --type brand",
+          "cwd": "/data/oracleforge"
+        },
+        "id": "exec-forge",
+        "name": "Generate Image",
+        "type": "n8n-nodes-base.executeCommand",
+        "typeVersion": 1,
+        "position": [200, 0]
+      }
+    ],
+    "connections": {
+      "Webhook /forge-image": {
+        "main": [[{ "node": "Generate Image", "type": "main", "index": 0 }]]
+      }
+    },
+    "settings": { "executionOrder": "v1" }
+  }
+]

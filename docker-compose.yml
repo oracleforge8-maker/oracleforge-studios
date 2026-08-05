@@ -1,0 +1,71 @@
+# ============================================================
+# OracleForge — docker-compose.yml
+# Runs the web app + n8n orchestrator together.
+#
+# Usage:
+#   docker compose up -d
+#   Web:  http://localhost:5000
+#   n8n:  http://localhost:5678
+# ============================================================
+
+version: "3.9"
+
+services:
+  # --- OracleForge web + agents ---
+  oracleforge:
+    build: .
+    container_name: oracleforge
+    restart: unless-stopped
+    ports:
+      - "5000:5000"
+    env_file:
+      - .env
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: ["python", "main.py", "--serve-web", "--port", "5000"]
+
+  # --- Observatory Dashboard (The Observatory) ---
+  dashboard:
+    build: .
+    container_name: oracleforge-dashboard
+    restart: unless-stopped
+    ports:
+      - "5001:5001"
+    env_file:
+      - .env
+    environment:
+      - DASHBOARD_PORT=5001
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+    command: ["python", "main.py", "--serve-dashboard", "--port", "5001"]
+    depends_on:
+      - oracleforge
+
+  # --- n8n orchestration (optional but recommended) ---
+  n8n:
+    image: n8nio/n8n:latest
+    container_name: oracleforge-n8n
+    restart: unless-stopped
+    ports:
+      - "5678:5678"
+    environment:
+      - N8N_BASIC_AUTH_ACTIVE=true
+      - N8N_BASIC_AUTH_USER=admin
+      - N8N_BASIC_AUTH_PASSWORD=changeme
+      - N8N_HOST=localhost
+      - N8N_PORT=5678
+      - N8N_PROTOCOL=http
+    volumes:
+      - ./n8n:/home/node/.n8n
+      - ./:/data/oracleforge
+    depends_on:
+      - oracleforge
+
+  # --- Optional: Stripe CLI for webhook testing ---
+  # stripe-cli:
+  #   image: stripe/stripe-cli:latest
+  #   command: listen --forward-to http://oracleforge:5000/api/stripe/webhook
+  #   environment:
+  #     - STRIPE_API_KEY=${STRIPE_SECRET_KEY}

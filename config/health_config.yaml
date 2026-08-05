@@ -1,0 +1,74 @@
+# ============================================================
+# OracleForge Studios — Watchtower Health Configuration
+# ============================================================
+
+# How often the Watchtower runs (seconds)
+# 1800 = every 30 minutes initially; becomes 3600 (hourly) after 24h stability
+check_interval_seconds: 1800
+stabilize_after_hours: 24
+stable_interval_seconds: 3600
+
+# Timeout for each connectivity check (seconds)
+check_timeout_seconds: 10
+
+# --- API connectivity checks ---
+# Each entry: name, url (or "env" to use configured key), method
+api_checks:
+  - name: openrouter
+    url: https://openrouter.ai/api/v1/models
+    method: GET
+    requires_key: OPENROUTER_API_KEY
+  - name: openai
+    url: https://api.openai.com/v1/models
+    method: GET
+    requires_key: OPENAI_API_KEY
+  - name: twitter
+    url: https://api.twitter.com/2/users/me
+    method: GET
+    requires_key: TWITTER_BEARER_TOKEN
+  - name: stripe
+    url: https://api.stripe.com/v1/balance
+    method: GET
+    requires_key: STRIPE_SECRET_KEY
+
+# --- Website uptime check ---
+website:
+  url: http://localhost:5000
+  expected_status: 200
+
+# --- Database integrity ---
+database:
+  required_tables:
+    - trends
+    - posts
+    - subscribers
+    - financial_records
+    - celebrity_posts
+    - replies
+    - settings
+
+# --- Social posting verification ---
+social:
+  check_last_posts: 3
+  platforms:
+    - twitter
+    - discord
+    - linkedin
+
+# --- Log scanning ---
+logs:
+  scan_recent_lines: 200
+  error_keywords:
+    - "ERROR"
+    - "Traceback"
+    - "Fatal"
+    - "CRITICAL"
+
+# --- Alerting ---
+alerts:
+  # Send alerts to the dashboard (always on)
+  dashboard: true
+  # Optional email alerts (requires SMTP config in .env)
+  email: false
+  # Only alert if status is worse than this
+  min_severity: warning

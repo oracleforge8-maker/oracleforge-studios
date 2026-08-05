@@ -1,0 +1,82 @@
+# ============================================================
+# OracleForge Studios — Render.com Blueprint Config
+#
+# Deploy: push to GitHub, then in Render:
+#   New → Blueprint → select repo → Apply
+# Render reads this file and provisions the service automatically.
+# ============================================================
+
+services:
+  - type: web
+    name: oracleforge-studios
+    runtime: python
+    plan: free
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: "gunicorn wsgi:app --config gunicorn.conf.py"
+    healthCheckPath: /
+    autoDeploy: true
+
+    # --- Persistent disk for SQLite (data survives restarts) ---
+    disk:
+      name: oracleforge-data
+      mountPath: /opt/render/project/src/data
+      sizeGB: 1
+
+    # --- Environment variables (set secrets here, NOT in .env) ---
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SITE_URL
+        value: https://oracleforge-studios.onrender.com
+      - key: FLASK_SECRET_KEY
+        sync: false            # set manually in Render dashboard
+      - key: DASHBOARD_USER
+        sync: false
+      - key: DASHBOARD_PASSWORD
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: OPENROUTER_MODEL
+        value: deepseek/deepseek-v4-flash
+      - key: OPENROUTER_FALLBACK_MODEL
+        value: deepseek/deepseek-chat
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: TWITTER_API_KEY
+        sync: false
+      - key: TWITTER_API_SECRET
+        sync: false
+      - key: TWITTER_ACCESS_TOKEN
+        sync: false
+      - key: TWITTER_ACCESS_SECRET
+        sync: false
+      - key: TWITTER_BEARER_TOKEN
+        sync: false
+      - key: DISCORD_BOT_TOKEN
+        sync: false
+      - key: LINKEDIN_ACCESS_TOKEN
+        sync: false
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+      - key: STRIPE_PRICE_RADAR_PRO
+        sync: false
+      - key: STRIPE_PRICE_FORGE
+        sync: false
+      - key: DATABASE_PATH
+        value: /opt/render/project/src/data/chronicler.db
+      - key: ARCHIVE_PATH
+        value: /opt/render/project/src/data/archive
+      - key: LOG_PATH
+        value: /opt/render/project/src/data/logs
+      - key: VAULT_PATH
+        value: /opt/render/project/src/data/vault/credentials.enc
+      - key: MANIFEST_PATH
+        value: /opt/render/project/src/data/vault/manifest.enc
+      - key: GUNICORN_WORKERS
+        value: "1"
+      - key: GUNICORN_THREADS
+        value: "4"

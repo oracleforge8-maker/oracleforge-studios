@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Health{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h1>🩺 Health Report</h1>
+    <p>Detailed status from The Watchtower. Auto-refreshes every 30s.</p>
+    <button class="btn btn-primary" id="runCheckBtn">🔄 Run Check Now</button>
+</div>
+
+<div class="health-hero" id="healthHero">
+    <div class="health-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Loading…</span>
+    </div>
+    <div class="health-summary" id="healthSummary"></div>
+</div>
+
+<div class="card">
+    <div class="card-head"><h3>Check Results</h3></div>
+    <div id="checkList" class="check-list">
+        <p class="muted">Loading…</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-head"><h3>History</h3></div>
+    <div id="historyList" class="history-list">
+        <p class="muted">Loading…</p>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    function renderChecks(checks) {
+        const list = document.getElementById('checkList');
+        list.innerHTML = '';
+        if (!checks || !checks.length) {
+            list.innerHTML = '<p class="muted">No checks yet.</p>';
+            return;
+        }
+        checks.forEach(function (c) {
+            const div = document.createElement('div');
+            div.className = 'check-item ' + c.level;
+            div.innerHTML = '<span class="check-name">' + c.name + '</span>' +
+                '<span class="check-detail">' + (c.detail || '') + '</span>' +
+                '<span class="check-badge ' + c.level + '">' + c.level.toUpperCase() + '</span>';
+            list.appendChild(div);
+        });
+    }
+
+    function renderHistory(history) {
+        const list = document.getElementById('historyList');
+        list.innerHTML = '';
+        if (!history || !history.length) {
+            list.innerHTML = '<p class="muted">No history yet.</p>';
+            return;
+        }
+        history.forEach(function (h) {
+            const div = document.createElement('div');
+            div.className = 'history-item';
+            div.innerHTML = '<span class="history-time">' + (h.generated_at || '').slice(0, 16) + '</span>' +
+                '<span class="history-status ' + h.overall + '">' + h.overall.toUpperCase() + '</span>' +
+                '<span class="history-detail">' + (h.summary ? h.summary.ok + ' ok / ' + h.summary.warning + ' warn / ' + h.summary.critical + ' crit' : '') + '</span>';
+            list.appendChild(div);
+        });
+    }
+
+    async function load() {
+        try {
+            const [latestRes, historyRes] = await Promise.all([
+                fetch('/api/dashboard/health/latest'),
+                fetch('/api/dashboard/health/history')
+            ]);
+            const latest = await latestRes.json();
+            const historyData = await historyRes.json();
+
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            const overall = latest.overall || 'unknown';
+            dot.className = 'status-dot ' + overall;
+            text.textContent = 'System: ' + overall.toUpperCase();
+            document.getElementById('healthSummary').textContent =
+                (latest.summary ? latest.summary.ok + ' ok / ' + latest.summary.warning + ' warn / ' + latest.summary.critical + ' crit' : 'No data yet');
+
+            renderChecks(latest.checks);
+            renderHistory(historyData.history || []);
+        } catch (err) {
+            document.getElementById('statusText').textContent = 'Error: ' + err;
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        load();
+        setInterval(load, 30000);
+        document.getElementById('runCheckBtn').addEventListener('click', async function () {
+            this.textContent = '⏳ Running…';
+            await fetch('/api/dashboard/health/run', { method: 'POST' });
+            this.textContent = '🔄 Run Check Now';
+            load();
+        });
+    });
+</script>
+{% endblock %}

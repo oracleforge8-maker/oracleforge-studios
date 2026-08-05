@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block title %}Settings{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h1>⚙️ System Settings</h1>
+    <p>Non-secret system configuration and status.</p>
+</div>
+
+<div class="card">
+    <div class="card-head"><h3>System Info</h3></div>
+    <div id="settingsList" class="settings-list">
+        <p class="muted">Loading…</p>
+    </div>
+</div>
+
+<!-- Configuration (.env) view -->
+<div class="card">
+    <div class="card-head">
+        <h3>🔧 Configuration (.env)</h3>
+        <span class="muted" id="envPath"></span>
+    </div>
+    <p class="muted" style="margin-bottom: 1rem;">
+        Secret values are masked for security. Full values are only available
+        in the encrypted Vault after unlocking with the master password.
+    </p>
+    <div id="configSummary" class="muted" style="margin-bottom: 1rem;"></div>
+    <div id="configList" class="config-list">
+        <p class="muted">Loading…</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-head"><h3>Security Notes</h3></div>
+    <ul class="security-list">
+        <li>🔐 All credentials are encrypted at rest (Fernet + PBKDF2).</li>
+        <li>🔑 The vault requires the master password to decrypt — never stored.</li>
+        <li>🚪 Dashboard sessions expire on logout.</li>
+        <li>🛡️ Login is rate-limited (5 attempts / 5 minutes).</li>
+        <li>🌐 Use HTTPS in production to protect sessions.</li>
+    </ul>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', async function () {
+        try {
+            const res = await fetch('/api/dashboard/settings');
+            const data = await res.json();
+            const list = document.getElementById('settingsList');
+            list.innerHTML = '';
+            const rows = [
+                ['Site URL', data.site_url],
+                ['Environment', data.flask_env],
+                ['Subscribers', data.subscriber_count],
+                ['Trends Stored', data.trend_count],
+                ['Repairs Logged', data.repair_count]
+            ];
+            rows.forEach(function (r) {
+                const div = document.createElement('div');
+                div.className = 'settings-row';
+                div.innerHTML = '<span class="settings-key">' + r[0] + '</span><span class="settings-value">' + r[1] + '</span>';
+                list.appendChild(div);
+            });
+        } catch (err) {
+            document.getElementById('settingsList').innerHTML = '<p class="muted">Error: ' + err + '</p>';
+        }
+
+        // Load the masked .env configuration
+        try {
+            const cfgRes = await fetch('/api/dashboard/config');
+            const cfg = await cfgRes.json();
+            document.getElementById('envPath').textContent = cfg.env_path;
+            document.getElementById('configSummary').textContent =
+                cfg.counts.total + ' keys — ' + cfg.counts.set + ' set, ' + cfg.counts.missing + ' missing';
+
+            const cfgList = document.getElementById('configList');
+            cfgList.innerHTML = '';
+            if (!cfg.keys || !cfg.keys.length) {
+                cfgList.innerHTML = '<p class="muted">No configuration keys found.</p>';
+                return;
+            }
+            cfg.keys.forEach(function (k) {
+                const div = document.createElement('div');
+                div.className = 'config-item';
+                const status = k.set ? 'set' : 'missing';
+                const value = k.set ? (k.secret ? k.masked : k.value) : '(not set)';
+                div.innerHTML = '<span class="config-key">' + k.key + '</span>' +
+                    '<span class="config-value">' + value + '</span>' +
+                    '<span class="config-status ' + status + '">' + (k.set ? '✅' : '❌') + '</span>';
+                cfgList.appendChild(div);
+            });
+        } catch (err) {
+            document.getElementById('configList').innerHTML = '<p class="muted">Error loading config: ' + err + '</p>';
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Tools{% endblock %}
+
+{% block content %}
+
+<!-- ================= Tools Header ================= -->
+<section class="hero" style="padding: 3rem 0 2rem;">
+    <div class="container">
+        <h1>Our <span class="gradient-text">Tools</span></h1>
+        <p class="tagline">Pick your weapon. The forge is hot. 🔥</p>
+    </div>
+</section>
+
+<!-- ================= Product Cards ================= -->
+<section>
+    <div class="container">
+        <div class="cards-grid">
+
+            <!-- The Radar (Free) -->
+            <div class="card">
+                <h3>📡 The Radar</h3>
+                <div class="price">Free</div>
+                <ul>
+                    <li>3 daily trend posts on X/Twitter</li>
+                    <li>Delayed trend data (4-8h)</li>
+                    <li>Public Discord #trend-radar feed</li>
+                    <li>Live demo feed on this site</li>
+                </ul>
+                <a href="/waitlist" class="btn btn-outline">Join Free Tier</a>
+            </div>
+
+            <!-- The Radar Pro ($20/mo) -->
+            <div class="card badge-popular">
+                <span class="badge">Most Popular</span>
+                <h3>🎯 The Radar Pro</h3>
+                <div class="price">$20<span style="font-size: 1rem; color: var(--silver);">/month</span></div>
+                <ul>
+                    <li>5 emerging themes with predicted peak windows</li>
+                    <li>Weekly PDF report + charts</li>
+                    <li>Private #subscriber-only Discord access</li>
+                    <li>Priority AI replies from ChadSatoshi</li>
+                    <li>Early trend alerts (near real-time)</li>
+                </ul>
+                <a href="/waitlist" class="btn btn-primary">Get Pro — Waitlist 🚀</a>
+            </div>
+
+            <!-- The Forge (B2B) -->
+            <div class="card">
+                <h3>⚒️ The Forge</h3>
+                <div class="price">Custom</div>
+                <ul>
+                    <li>White-label meme coin launches</li>
+                    <li>Full autonomous social stack for your brand</li>
+                    <li>Dedicated AI intelligence pipeline</li>
+                    <li>Bespoke reporting & analytics</li>
+                    <li>Direct channel with the OracleForge team</li>
+                </ul>
+                <a href="/waitlist" class="btn btn-purple">Talk to Us</a>
+            </div>
+
+        </div>
+    </div>
+</section>
+
+<!-- ================= How It Works ================= -->
+<section>
+    <div class="container text-center">
+        <h2>How the <span class="gradient-text">Forge</span> Works</h2>
+        <p style="max-width: 700px; margin: 0.5rem auto 2rem;">
+            The machine does the heavy lifting. You just read, smile, and ride.
+        </p>
+        <div class="cards-grid">
+            <div class="card">
+                <h3>1️⃣ Scout</h3>
+                <p>Twitter trends, Pump.fun launches, CMC gainers, Reddit hype —
+                scraped every 4 hours and normalized into one clean feed.</p>
+            </div>
+            <div class="card">
+                <h3>2️⃣ Analyze</h3>
+                <p>DeepSeek Flash identifies the top narratives, flags red flags,
+                and predicts peak windows with confidence scores.</p>
+            </div>
+            <div class="card">
+                <h3>3️⃣ Publish</h3>
+                <p>ChadSatoshi turns it into posts, replies, and newsletters —
+                on-brand, on-time, on-the-nose. Every time.</p>
+            </div>
+            <div class="card">
+                <h3>4️⃣ Archive</h3>
+                <p>The Chronicler stores everything forever in JSON + SQLite,
+                so patterns become weapons over time.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section>
+    <div class="container text-center">
+        <a href="/pricing" class="btn btn-primary btn-lg">Compare Pricing →</a>
+    </div>
+</section>
+
+{% endblock %}

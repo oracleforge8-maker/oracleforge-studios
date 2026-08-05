@@ -1,0 +1,31 @@
+# ============================================================
+# OracleForge — .gitignore
+# NEVER commit secrets or runtime data
+# ============================================================
+
+# --- Secrets ---
+.env
+.env.local
+*.pem
+
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+
+# --- Runtime data ---
+data/
+logs/
+web_server.log
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- IDE ---
+.vscode/
+.idea/

@@ -1,0 +1,106 @@
+{% extends "base.html" %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+<!-- ================= Hero ================= -->
+<section class="hero">
+    <div class="container">
+        <h1 class="gradient-text">Your AI-Powered Meme Coin<br>Intelligence Engine</h1>
+        <p class="tagline">We forge the memes. You ride the waves. 🌊</p>
+        <p class="description">
+            OracleForge uses autonomous AI agents to scrape, analyze, and publish
+            meme coin intelligence 24/7. The Scout never sleeps. The Brain never
+            FOMOs. ChadSatoshi never stops posting.
+        </p>
+        <div class="hero-cta">
+            <a href="/waitlist" class="btn btn-primary btn-lg">🚀 Join the Waitlist</a>
+            <a href="/live-demo" class="btn btn-outline btn-lg">📡 See It Live</a>
+        </div>
+
+        <!-- Live Trend Demo Widget -->
+        <div class="live-widget" id="liveWidget">
+            <div class="live-widget-head">
+                <span class="pulse-dot"></span>
+                <h3>📡 LIVE — The Scout's Latest Reads</h3>
+            </div>
+            <div id="trendFeed" class="live-widget-empty">
+                Loading the matrix... 🧠
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= Trust Bar ================= -->
+<section>
+    <div class="container text-center">
+        <h2>The <span class="gradient-text">OracleForge</span> Stack</h2>
+        <p style="max-width: 700px; margin: 0.5rem auto 2rem;">
+            Four autonomous agents working together like a well-oiled, slightly
+            unhinged machine.
+        </p>
+        <div class="cards-grid">
+            <div class="card">
+                <h3>🕵️ The Scout</h3>
+                <p>Scrapes trending tokens, celebrity posts, and market data from
+                Twitter/X, Pump.fun, CoinMarketCap, DEXScreener, and Reddit —
+                every 4 hours, around the clock.</p>
+            </div>
+            <div class="card">
+                <h3>🧠 The Brain</h3>
+                <p>DeepSeek Flash processes the data into narratives, predictions,
+                and content — all in the ChadSatoshi voice.</p>
+            </div>
+            <div class="card">
+                <h3>📣 The Voice</h3>
+                <p>ChadSatoshi posts to Twitter/X, Discord, and LinkedIn. Replies
+                to mentions. Engages celebrities. Follows the right people.</p>
+            </div>
+            <div class="card">
+                <h3>📚 The Chronicler</h3>
+                <p>Archives every data point to JSON + SQLite and tracks every
+                penny spent. History never forgets.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= CTA ================= -->
+<section>
+    <div class="container">
+        <div class="newsletter-box">
+            <h2>First 100 Degens Get<br><span class="gradient-text">1 Month of Pro Free</span></h2>
+            <p>Join the waitlist. Refer 3 friends → permanent Pro access for life.</p>
+            <form class="newsletter-form" id="waitlistForm" action="/api/waitlist" method="POST">
+                <input type="email" name="email" placeholder="your@email.anon" required>
+                <input type="hidden" name="name" value="">
+                <input type="hidden" name="referred_by" value="">
+                <button type="submit" class="btn btn-primary">Join Now 🔥</button>
+            </form>
+            <div id="formMessage" style="margin-top: 1rem;"></div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= Energy Drink ================= -->
+<section>
+    <div class="container">
+        <div class="energy-drink">
+            <h3>⚡ Buy Us an Energy Drink</h3>
+            <p>OracleForge runs on caffeine, cloud credits, and chaos. Affiliate
+            links keep the forge hot. Zero cost to you.</p>
+            <div class="aff-links">
+                <a href="{{ affiliate_coinbase }}" target="_blank" rel="noopener nofollow">Coinbase</a>
+                <a href="{{ affiliate_binance }}" target="_blank" rel="noopener nofollow">Binance</a>
+                <a href="{{ affiliate_namecheap }}" target="_blank" rel="noopener nofollow">Namecheap</a>
+            </div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/live.js') }}"></script>
+{% endblock %}

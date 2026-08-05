@@ -1,0 +1,90 @@
+{% extends "base.html" %}
+
+{% block title %}Blog / The Degen Dispatch{% endblock %}
+
+{% block content %}
+
+<!-- ================= Blog Header ================= -->
+<section class="hero" style="padding: 3rem 0 2rem;">
+    <div class="container">
+        <h1>The <span class="gradient-text">Degen Dispatch</span></h1>
+        <p class="tagline">Auto-generated crypto news in ChadSatoshi's voice.</p>
+        <p class="description">
+            Every post is written by an AI that never sleeps, never FOMO's,
+            and always includes a disclaimer. Not financial advice — just vibes,
+            data, and occasionally brutal honesty.
+        </p>
+    </div>
+</section>
+
+<!-- ================= Latest 5 Posts ================= -->
+<section>
+    <div class="container">
+        <div class="blog-list">
+            {% if posts %}
+                {% for post in posts %}
+                <article class="blog-card">
+                    <div class="meta">
+                        {{ post.platform }} • {{ post.post_type }} • {{ post.created_at[:10] }}
+                    </div>
+                    <h3>{{ post.title or post.content[:80] }}{% if post.content|length > 80 %}{% endif %}</h3>
+                    <p>{{ post.content }}</p>
+                </article>
+                {% endfor %}
+            {% else %}
+                <div class="blog-card">
+                    <div class="meta">COMING SOON</div>
+                    <h3>Our writers are still booting up... 🚀</h3>
+                    <p>ChadSatoshi is currently calibrating the matrix. The first
+                    Degen Dispatch lands the moment The Scout captures enough data.
+                    Join the waitlist to get it in your inbox.</p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</section>
+
+<!-- ================= Newsletter CTA ================= -->
+<section>
+    <div class="container">
+        <div class="newsletter-box">
+            <h2>Get <span class="gradient-text">The Degen Dispatch</span> Weekly</h2>
+            <p>3 paragraphs. Zero fluff. All memes. Friday mornings.</p>
+            <form class="newsletter-form" id="newsletterForm" action="/api/newsletter" method="POST">
+                <input type="email" name="email" placeholder="your@email.anon" required>
+                <button type="submit" class="btn btn-primary">Subscribe 💌</button>
+            </form>
+            <div id="newsletterMessage" style="margin-top: 1rem;"></div>
+        </div>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Newsletter form handler (Same-Origin fetch POST)
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('newsletterForm');
+        const msg = document.getElementById('newsletterMessage');
+        if (!form) return;
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const email = encodeURIComponent(form.email.value.trim());
+            try {
+                const res = await fetch('/api/newsletter', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'email=' + email
+                });
+                const data = await res.json();
+                msg.textContent = data.success
+                    ? '💌 You are on the list, anon! Welcome to the cult.'
+                    : '⚠️ ' + (data.error || 'Something went wrong');
+            } catch (err) {
+                msg.textContent = '⚠️ Network error: ' + String(err);
+            }
+        });
+    });
+</script>
+{% endblock %}

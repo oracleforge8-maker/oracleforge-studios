@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Welcome to OracleForge</title>
+    <style>
+        /* Inline-friendly email styles (dark theme, neon accents) */
+        body {
+            margin: 0;
+            padding: 0;
+            background-color: #0A0A0A;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #C0C0C0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+        .header {
+            text-align: center;
+            padding: 32px 0 16px;
+        }
+        .logo {
+            font-size: 28px;
+            font-weight: 800;
+            color: #FFFFFF;
+        }
+        .logo span {
+            color: #00FF88;
+        }
+        .tagline {
+            color: #00FF88;
+            font-size: 14px;
+            margin-top: 4px;
+        }
+        .card {
+            background: #12102A;
+            border: 1px solid rgba(192, 192, 192, 0.15);
+            border-radius: 12px;
+            padding: 24px;
+            margin: 16px 0;
+        }
+        h1 {
+            color: #FFFFFF;
+            font-size: 22px;
+            margin: 0 0 12px;
+        }
+        p {
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0 0 12px;
+        }
+        .cta {
+            display: inline-block;
+            background: #00FF88;
+            color: #000000;
+            font-weight: 700;
+            text-decoration: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            margin: 8px 0;
+        }
+        .referral {
+            background: rgba(0, 255, 136, 0.08);
+            border: 1px dashed #00FF88;
+            border-radius: 8px;
+            padding: 16px;
+            margin: 16px 0;
+            text-align: center;
+        }
+        .referral-code {
+            font-size: 20px;
+            font-weight: 800;
+            color: #00FF88;
+            letter-spacing: 1px;
+        }
+        .footer {
+            text-align: center;
+            font-size: 11px;
+            color: #666;
+            padding: 24px 0;
+        }
+        .footer a {
+            color: #00FF88;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+
+        <!-- Header -->
+        <div class="header">
+            <div class="logo">Oracle<span>Forge</span></div>
+            <div class="tagline">We forge the memes. You ride the waves. 🌊</div>
+        </div>
+
+        <!-- Welcome -->
+        <div class="card">
+            <h1>gm anon! 👋</h1>
+            <p>
+                You're officially on the OracleForge waitlist. Welcome to the cult.
+                The machine is watching the memecoin matrix 24/7 so you don't have to.
+            </p>
+            <p>
+                <strong>First 100 degens get 1 month of The Radar Pro free</strong> when
+                we flip the switch to paid. You're in line. 🎁
+            </p>
+            <p style="text-align: center;">
+                <a href="{{ site_url }}/live-demo" class="cta">📡 See The Scout Live</a>
+            </p>
+        </div>
+
+        <!-- Referral -->
+        <div class="card">
+            <h1>Refer 3 → FREE Pro for Life 🤝</h1>
+            <p>
+                Share your personal referral link. When 3 friends join, your account
+                is permanently upgraded to The Radar Pro. The matrix rewards loyalty.
+            </p>
+            <div class="referral">
+                <div style="font-size: 12px; color: #C0C0C0; margin-bottom: 6px;">YOUR REFERRAL CODE</div>
+                <div class="referral-code">{{ referral_code }}</div>
+                <div style="font-size: 12px; margin-top: 8px;">
+                    <a href="{{ site_url }}/waitlist?ref={{ referral_code }}" style="color: #00FF88;">
+                        {{ site_url }}/waitlist?ref={{ referral_code }}
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- What's next -->
+        <div class="card">
+            <h1>What happens next? 🚀</h1>
+            <p>
+                <strong>Weekly:</strong> The Degen Dispatch lands in your inbox every Friday —
+                3 paragraphs of pure memecoin intelligence in ChadSatoshi's voice.
+            </p>
+            <p>
+                <strong>Soon:</strong> The Radar Pro opens to the first 100 waitlist members
+                with a free month. No credit card required.
+            </p>
+            <p>
+                <strong>Always:</strong> Not financial advice. Just vibes and data. DYOR, anon. 🫡
+            </p>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer">
+            <p>
+                © 2026 OracleForge · <a href="{{ site_url }}">oracleforge.ai</a> ·
+                <a href="https://x.com/ChadSatoshi">@ChadSatoshi</a>
+            </p>
+            <p>
+                You're receiving this because you joined the OracleForge waitlist.
+                Unsubscribe anytime — but the memes will miss you.
+            </p>
+        </div>
+
+    </div>
+</body>
+</html>

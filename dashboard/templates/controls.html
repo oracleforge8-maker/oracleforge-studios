@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Controls{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h1>🎛️ Agent Controls</h1>
+    <p>Pause, resume, or trigger agents. Adjust system parameters.</p>
+</div>
+
+<div class="card">
+    <div class="card-head"><h3>Agents</h3></div>
+    <div id="agentList" class="agent-list">
+        <p class="muted">Loading…</p>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-head"><h3>Parameters</h3></div>
+    <div class="param-form">
+        <div class="form-group">
+            <label for="post_frequency">Post Frequency</label>
+            <input type="text" id="post_frequency" placeholder="3x daily">
+        </div>
+        <div class="form-group">
+            <label for="voice_tone">Voice Tone</label>
+            <input type="text" id="voice_tone" placeholder="energetic">
+        </div>
+        <div class="form-group">
+            <label for="scout_interval_hours">Scout Interval (hours)</label>
+            <input type="text" id="scout_interval_hours" placeholder="4">
+        </div>
+        <button class="btn btn-primary" id="saveParamsBtn">💾 Save Parameters</button>
+        <div id="paramMsg" class="muted" style="margin-top: 0.5rem;"></div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    const AGENTS = ['scout', 'brain', 'forge', 'social', 'chronicle', 'watchtower', 'mechanic'];
+
+    async function loadControls() {
+        const res = await fetch('/api/dashboard/controls');
+        const data = await res.json();
+        const list = document.getElementById('agentList');
+        list.innerHTML = '';
+        AGENTS.forEach(function (agent) {
+            const state = (data.agents && data.agents[agent]) || 'running';
+            const div = document.createElement('div');
+            div.className = 'agent-row';
+            div.innerHTML = '<span class="agent-name">' + agent + '</span>' +
+                '<span class="agent-state ' + state + '">' + state + '</span>' +
+                '<div class="agent-actions">' +
+                    '<button class="btn btn-sm" data-agent="' + agent + '" data-action="run">▶ Run</button>' +
+                    (state === 'running'
+                        ? '<button class="btn btn-sm btn-warn" data-agent="' + agent + '" data-action="pause">⏸ Pause</button>'
+                        : '<button class="btn btn-sm btn-primary" data-agent="' + agent + '" data-action="resume">▶ Resume</button>') +
+                '</div>';
+            list.appendChild(div);
+        });
+
+        // Wire action buttons
+        list.querySelectorAll('button[data-action]').forEach(function (btn) {
+            btn.addEventListener('click', async function () {
+                const agent = btn.dataset.agent;
+                const action = btn.dataset.action;
+                await fetch('/api/dashboard/controls/' + action, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ agent: agent })
+                });
+                loadControls();
+            });
+        });
+
+        // Prefill params
+        if (data.parameters) {
+            document.getElementById('post_frequency').value = data.parameters.post_frequency || '';
+            document.getElementById('voice_tone').value = data.parameters.voice_tone || '';
+            document.getElementById('scout_interval_hours').value = data.parameters.scout_interval_hours || '';
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        loadControls();
+        document.getElementById('saveParamsBtn').addEventListener('click', async function () {
+            const payload = {
+                post_frequency: document.getElementById('post_frequency').value,
+                voice_tone: document.getElementById('voice_tone').value,
+                scout_interval_hours: document.getElementById('scout_interval_hours').value
+            };
+            const res = await fetch('/api/dashboard/controls/params', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            const data = await res.json();
+            document.getElementById('paramMsg').textContent = data.success ? '✅ Saved' : '⚠️ Error';
+        });
+    });
+</script>
+{% endblock %}

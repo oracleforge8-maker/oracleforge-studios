@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login — OracleForge Studios</title>
+    <link rel="stylesheet" href="{{ url_for('observatory.static', filename='css/dashboard.css') }}">
+</head>
+<body class="login-body">
+    <div class="login-card">
+        <div class="login-brand">
+            <span class="brand-icon">👁️</span>
+            <h1>OracleForge <span>Studios</span></h1>
+            <p>The Observatory</p>
+        </div>
+        {% if error %}
+        <div class="alert alert-error">{{ error }}</div>
+        {% endif %}
+        <form method="POST" action="/dashboard/login">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required autofocus>
+            </div>
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="btn btn-primary btn-block">🔓 Sign In</button>
+        </form>
+        <p class="login-note">Secure access. Sessions expire on logout.</p>
+    </div>
+</body>
+</html>

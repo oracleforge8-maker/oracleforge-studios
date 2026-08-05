@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Observatory{% endblock %} — OracleForge Studios</title>
+    <link rel="stylesheet" href="{{ url_for('observatory.static', filename='css/dashboard.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+<div class="dash-shell">
+
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="sidebar-brand">
+            <span class="brand-icon">👁️</span>
+            <div>
+                <div class="brand-name">OracleForge</div>
+                <div class="brand-sub">Studios Observatory</div>
+            </div>
+        </div>
+        <nav class="sidebar-nav">
+            <a href="/dashboard" class="{{ 'active' if active == 'overview' }}">📊 Overview</a>
+            <a href="/dashboard/health" class="{{ 'active' if active == 'health' }}">🩺 Health</a>
+            <a href="/dashboard/activity" class="{{ 'active' if active == 'activity' }}">📜 Activity</a>
+            <a href="/dashboard/controls" class="{{ 'active' if active == 'controls' }}">🎛️ Controls</a>
+            <a href="/dashboard/finance" class="{{ 'active' if active == 'finance' }}">💰 Finance</a>
+            <a href="/dashboard/vault" class="{{ 'active' if active == 'vault' }}">🔐 Vault</a>
+            <a href="/dashboard/settings" class="{{ 'active' if active == 'settings' }}">⚙️ Settings</a>
+        </nav>
+        <div class="sidebar-footer">
+            <a href="/dashboard/logout" class="logout-link">🚪 Logout</a>
+        </div>
+    </aside>
+
+    <!-- Main content -->
+    <main class="dash-main">
+        {% block content %}{% endblock %}
+    </main>
+
+</div>
+<script src="{{ url_for('observatory.static', filename='js/dashboard.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

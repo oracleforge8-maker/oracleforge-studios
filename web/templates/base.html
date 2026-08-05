@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}OracleForge{% endblock %} — OracleForge</title>
+    <meta name='impact-site-verification' value='7a9edd5c-6a54-4cd1-ab1f-a90ce089f46a'>
+    <meta name="description" content="OracleForge — We forge the memes. You ride the waves. AI-powered meme coin intelligence engine.">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+    {% block head %}{% endblock %}
+</head>
+<body>
+
+<!-- ================= Navbar ================= -->
+<nav class="navbar" role="navigation" aria-label="Main navigation">
+    <div class="container">
+        <a href="/" class="brand">
+            <span class="brand-icon">👁️</span>
+            <span>OracleForge</span>
+        </a>
+        <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">☰</button>
+        <ul class="nav-links" id="navLinks">
+            <li><a href="/">Home</a></li>
+            <li><a href="/tools">Tools</a></li>
+            <li><a href="/live-demo">Live Demo</a></li>
+            <li><a href="/pricing">Pricing</a></li>
+            <li><a href="/blog">Blog</a></li>
+            <li><a href="/about">About</a></li>
+            <li><a href="/waitlist" class="btn btn-primary" style="padding: 0.45rem 1.1rem;">Join Waitlist</a></li>
+        </ul>
+    </div>
+</nav>
+
+<!-- ================= Page Content ================= -->
+<main>
+    {% block content %}{% endblock %}
+</main>
+
+<!-- ================= Footer ================= -->
+<footer class="footer">
+    <div class="container">
+        <div class="footer-grid">
+            <div>
+                <h4>OracleForge</h4>
+                <p style="font-size: 0.9rem;">We forge the memes. You ride the waves. 🌊<br>
+                AI-powered meme coin intelligence engine.</p>
+            </div>
+            <div>
+                <h4>Products</h4>
+                <ul class="footer-links">
+                    <li><a href="/tools">The Radar</a></li>
+                    <li><a href="/tools">The Radar Pro</a></li>
+                    <li><a href="/tools">The Forge</a></li>
+                    <li><a href="/pricing">Pricing</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Company</h4>
+                <ul class="footer-links">
+                    <li><a href="/about">Cult of the Machine</a></li>
+                    <li><a href="/blog">The Degen Dispatch</a></li>
+                    <li><a href="/waitlist">Waitlist</a></li>
+                    <li><a href="/waitlist">Referral Program</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Follow Us</h4>
+                <div class="social-links">
+                    <a href="https://x.com/ChadSatoshi" target="_blank" rel="noopener" aria-label="Twitter / X">𝕏</a>
+                    <a href="https://discord.gg/oracleforge" target="_blank" rel="noopener" aria-label="Discord">💬</a>
+                    <a href="https://linkedin.com/company/oracleforge" target="_blank" rel="noopener" aria-label="LinkedIn">in</a>
+                    <a href="https://t.me/oracleforge" target="_blank" rel="noopener" aria-label="Telegram">✈️</a>
+                </div>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>
+                © 2026 OracleForge. All rights reserved. |
+                <a href="/blog" style="color: var(--green);">The Degen Dispatch</a> |
+                Not financial advice — just vibes and data. DYOR, anon. 🫡
+            </p>
+            <p style="margin-top: 0.5rem;">
+                Affiliate Disclosure: Some links on this site are affiliate links. If you buy through them
+                we may earn a commission — which funds our energy drink addiction. ⚡
+            </p>
+        </div>
+    </div>
+</footer>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

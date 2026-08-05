@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+{% block title %}Vault{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h1>🔐 Credential Vault</h1>
+    <p>Encrypted at rest. Unlock with the master password to view services.</p>
+</div>
+
+<div class="card" id="vaultLocked">
+    <div class="card-head"><h3>Unlock Vault</h3></div>
+    <div class="form-group">
+        <label for="masterPassword">Master Password</label>
+        <input type="password" id="masterPassword" placeholder="Enter master password">
+    </div>
+    <button class="btn btn-primary" id="unlockBtn">🔓 Unlock</button>
+    <div id="vaultMsg" class="muted" style="margin-top: 0.5rem;"></div>
+</div>
+
+<div class="card" id="vaultUnlocked" style="display: none;">
+    <div class="card-head">
+        <h3>Stored Services</h3>
+        <div>
+            <button class="btn btn-sm" id="importEnvBtn">📥 Import .env</button>
+            <button class="btn btn-sm" id="exportBtn">📦 Export Backup</button>
+            <button class="btn btn-sm btn-warn" id="lockBtn">🔒 Lock</button>
+        </div>
+    </div>
+    <div id="serviceList" class="service-list">
+        <p class="muted">Loading…</p>
+    </div>
+    <div id="importMsg" class="muted" style="margin-top: 0.5rem;"></div>
+    <div id="exportMsg" class="muted" style="margin-top: 0.5rem;"></div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    async function checkStatus() {
+        const res = await fetch('/api/dashboard/vault/status');
+        const data = await res.json();
+        if (data.unlocked) {
+            document.getElementById('vaultLocked').style.display = 'none';
+            document.getElementById('vaultUnlocked').style.display = 'block';
+            loadServices();
+        }
+    }
+
+    async function loadServices() {
+        const res = await fetch('/api/dashboard/vault/services');
+        const data = await res.json();
+        const list = document.getElementById('serviceList');
+        list.innerHTML = '';
+        if (!data.services || !data.services.length) {
+            list.innerHTML = '<p class="muted">No services stored yet.</p>';
+            return;
+        }
+        data.services.forEach(function (s) {
+            const div = document.createElement('div');
+            div.className = 'service-item';
+            const meta = s.meta || {};
+            div.innerHTML = '<span class="service-name">' + s.service + '</span>' +
+                '<span class="service-status ' + (meta.status || '') + '">' + (meta.status || '') + '</span>' +
+                '<span class="service-meta">' + (meta.email || meta.signup_url || meta.notes || '') + '</span>';
+            list.appendChild(div);
+        });
+    }
+
+    document.addEventListener('DOMContentLoaded', function () {
+        checkStatus();
+
+        document.getElementById('unlockBtn').addEventListener('click', async function () {
+            const master = document.getElementById('masterPassword').value;
+            const res = await fetch('/api/dashboard/vault/unlock', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ master_password: master })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('vaultMsg').textContent = data.initialized ? '✅ Vault initialized' : '✅ Vault unlocked';
+                document.getElementById('vaultLocked').style.display = 'none';
+                document.getElementById('vaultUnlocked').style.display = 'block';
+                loadServices();
+            } else {
+                document.getElementById('vaultMsg').textContent = '⚠️ ' + (data.error || 'Failed');
+            }
+        });
+
+        document.getElementById('lockBtn').addEventListener('click', async function () {
+            await fetch('/api/dashboard/vault/lock', { method: 'POST' });
+            document.getElementById('vaultUnlocked').style.display = 'none';
+            document.getElementById('vaultLocked').style.display = 'block';
+            document.getElementById('masterPassword').value = '';
+        });
+
+        document.getElementById('exportBtn').addEventListener('click', async function () {
+            const res = await fetch('/api/dashboard/vault/export', { method: 'POST' });
+            const data = await res.json();
+            document.getElementById('exportMsg').textContent = data.success ? '✅ Backup: ' + data.path : '⚠️ ' + (data.error || 'Failed');
+        });
+
+        document.getElementById('importEnvBtn').addEventListener('click', async function () {
+            const res = await fetch('/api/dashboard/vault/import-env', { method: 'POST' });
+            const data = await res.json();
+            document.getElementById('importMsg').textContent = data.success
+                ? '✅ Imported ' + data.imported + ' .env keys into the encrypted vault'
+                : '⚠️ ' + (data.error || 'Failed');
+            loadServices();
+        });
+    });
+</script>
+{% endblock %}

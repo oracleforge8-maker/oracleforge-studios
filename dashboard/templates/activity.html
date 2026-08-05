@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Activity{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h1>📜 Activity Feed</h1>
+    <p>Recent agent actions: posts, repairs, and escalations.</p>
+</div>
+
+<div class="card">
+    <div class="card-head"><h3>All Activity</h3></div>
+    <div id="activityList" class="activity-list">
+        <p class="muted">Loading…</p>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', async function () {
+        try {
+            const res = await fetch('/api/dashboard/activity');
+            const data = await res.json();
+            const list = document.getElementById('activityList');
+            list.innerHTML = '';
+            if (!data.activity || !data.activity.length) {
+                list.innerHTML = '<p class="muted">No activity yet.</p>';
+                return;
+            }
+            data.activity.forEach(function (a) {
+                const div = document.createElement('div');
+                div.className = 'activity-item';
+                const icon = a.type === 'post' ? '📣' : a.type === 'repair' ? '🔧' : '🚨';
+                const text = a.content || a.title || (a.repair_type + ' → ' + a.target) || a.type;
+                const status = a.status || '';
+                div.innerHTML = '<span class="activity-icon">' + icon + '</span>' +
+                    '<span class="activity-text">' + text + '</span>' +
+                    '<span class="activity-status ' + status + '">' + status + '</span>' +
+                    '<span class="activity-time">' + (a.created_at || '').slice(0, 16) + '</span>';
+                list.appendChild(div);
+            });
+        } catch (err) {
+            document.getElementById('activityList').innerHTML = '<p class="muted">Error: ' + err + '</p>';
+        }
+    });
+</script>
+{% endblock %}

@@ -1,0 +1,153 @@
+# ============================================================
+# OracleForge Orchestration Schedule
+# Used by: n8n workflows, main.py scheduler mode, cron
+# Timezone: UTC (adjust for your local timezone if needed)
+# ============================================================
+
+# ------------------------------------------------------------
+# Full Data Cycle: Scout scrape + Brain analysis + Chronicle
+# Every 4 hours around the clock.
+# ------------------------------------------------------------
+scout_cycle:
+  cron: "0 */4 * * *"          # Every 4 hours
+  description: >
+    Runs The Scout (scrape Twitter trends, Pump.fun, CMC, Reddit, DEXScreener),
+    then The Brain (DeepSeek analysis), then The Chronicler stores results
+    and archives a daily JSON snapshot if the day has changed.
+  jobs:
+    - run_scout
+    - run_brain
+    - run_chronicle
+
+# ------------------------------------------------------------
+# The Radar: 3 daily posts
+# Posted at staggered times for max engagement spread.
+# ------------------------------------------------------------
+radar_posting:
+  cron: "0 9,16,22 * * *"      # 09:00, 16:00, 22:00 UTC daily
+  description: >
+    The Radar free tier posts 3 tweets per day with factual trend data.
+    Each post slot generates fresh content from the latest stored trends.
+  jobs:
+    - run_social
+  params:
+    platform: twitter
+    mode: radar_posts
+
+# ------------------------------------------------------------
+# Reply to @mentions
+# Every 2 hours, scan mentions and reply with ChadSatoshi voice.
+# ------------------------------------------------------------
+mention_replies:
+  cron: "0 */2 * * *"          # Every 2 hours
+  description: >
+    Scans Twitter for @mentions of the bot and replies with personality.
+    Skips if no new mentions or if Twitter API is unconfigured (dry-run).
+  jobs:
+    - run_social
+  params:
+    platform: twitter
+    mode: replies
+
+# ------------------------------------------------------------
+# Follow Strategy: 50 new accounts daily
+# ------------------------------------------------------------
+follow_strategy:
+  cron: "30 8 * * *"           # 08:30 UTC daily
+  description: >
+    Follows up to TWITTER_DAILY_FOLLOW_LIMIT (default 50) new accounts
+    matching crypto keywords. Runs before the first Radar post slot.
+  jobs:
+    - run_social
+  params:
+    platform: twitter
+    mode: follow
+
+# ------------------------------------------------------------
+# Celebrity Engagement Scan
+# Every 4 hours, scan celebrity posts with event keywords and comment.
+# ------------------------------------------------------------
+celebrity_engagement:
+  cron: "15 */4 * * *"         # :15 past each 4-hour mark
+  description: >
+    Scrapes celebrity posts matching keywords (birthday, party, new album,
+    new car, event, celebration, release, launch) and generates comments.
+  jobs:
+    - run_scout
+    - run_social
+  params:
+    platform: twitter
+    mode: celebrity_engagement
+
+# ------------------------------------------------------------
+# Voice Re-Prompt (weekly adaptation)
+# Every Monday, study trending posts and refresh ChadSatoshi's style.
+# ------------------------------------------------------------
+voice_refresh:
+  cron: "0 6 * * 1"            # Monday 06:00 UTC
+  description: >
+    The Brain fetches recent trending posts, extracts style patterns,
+    and refreshes the ChadSatoshi style guide stored in the DB.
+  jobs:
+    - run_brain
+  params:
+    mode: voice_refresh
+
+# ------------------------------------------------------------
+# Newsletter: "The Degen Dispatch"
+# Friday 10:00 AM (10:00 UTC)
+# ------------------------------------------------------------
+newsletter:
+  cron: "0 10 * * 5"           # Friday 10:00 UTC
+  description: >
+    Generates the weekly 3-paragraph newsletter in ChadSatoshi's voice
+    from the week's trend data. Output stored in DB + archive for
+    Substack/ConvertKit/email automation.
+  jobs:
+    - run_brain
+  params:
+    mode: newsletter
+
+# ------------------------------------------------------------
+# Weekly Report (The Chronicler)
+# Sunday 6 PM (18:00 UTC): charts + summary report.
+# ------------------------------------------------------------
+weekly_report:
+  cron: "0 18 * * 0"           # Sunday 18:00 UTC
+  description: >
+    Generates weekly summary report with matplotlib charts covering:
+    token trends, engagement stats, financials (API costs/earnings).
+    Saved to data/reports/ and archived.
+  jobs:
+    - run_chronicle
+  params:
+    mode: weekly_report
+
+# ------------------------------------------------------------
+# On-Demand Image Generation
+# Triggered via n8n webhook when a new coin is featured or
+# a social post needs an image. Not on a fixed cron.
+# ------------------------------------------------------------
+image_generation:
+  trigger: webhook             # n8n webhook: POST /webhook/forge-image
+  description: >
+    Generates an image via DALL-E 3 (Business/Meme/Brand template)
+    with branded SVG fallback if no OpenAI key is configured.
+  jobs:
+    - run_forge
+  params:
+    mode: on_demand
+
+# ------------------------------------------------------------
+# Daily Archive Checkpoint
+# Every day 00:05 UTC; ensures today's archive folder + JSON exists.
+# ------------------------------------------------------------
+daily_archive:
+  cron: "5 0 * * *"            # 00:05 UTC daily
+  description: >
+    Forces a full daily JSON snapshot of all tables to
+    data/archive/YYYY/MM/DD/ regardless of scout cycle.
+  jobs:
+    - run_chronicle
+  params:
+    mode: daily_archive

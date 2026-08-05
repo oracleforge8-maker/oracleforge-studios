@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+
+{% block title %}Live Demo{% endblock %}
+
+{% block content %}
+
+<!-- ================= Live Demo Header ================= -->
+<section class="hero" style="padding: 3rem 0 2rem;">
+    <div class="container">
+        <h1>Live <span class="gradient-text">Demo</span></h1>
+        <p class="tagline">The Scout's latest trend analysis — in real time.</p>
+        <p class="description">
+            This feed is powered by the actual OracleForge pipeline running behind
+            the scenes. Trends are scraped, analyzed by DeepSeek Flash, and logged
+            by The Chronicler — then displayed here.
+        </p>
+    </div>
+</section>
+
+<!-- ================= Live Feed ================= -->
+<section>
+    <div class="container">
+        <div class="live-widget" style="max-width: 860px;">
+            <div class="live-widget-head">
+                <span class="pulse-dot"></span>
+                <h3>📡 ORACLEFORGE SCOUT FEED</h3>
+                <span style="margin-left: auto; font-size: 0.8rem; opacity: 0.6;" id="lastUpdated"></span>
+            </div>
+            <div id="liveFeed" class="live-widget-empty">
+                Loading the matrix... 🧠
+            </div>
+        </div>
+
+        <!-- Auto-refresh note -->
+        <p class="text-center mt-2" style="font-size: 0.85rem; opacity: 0.7;">
+            Auto-refreshes every 30 seconds. Data is scraped approximately every 4 hours
+            by The Scout. <a href="/tools" style="color: var(--green);">Learn about the stack →</a>
+        </p>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Single-page live demo feed — renders rows via DOM APIs (XSS-safe,
+    // no HTML string escaping needed).
+    const DemoFeed = (() => {
+        function row(symbol, source, change) {
+            const div = document.createElement('div');
+            div.className = 'trend-row';
+
+            const left = document.createElement('div');
+            const sym = document.createElement('span');
+            sym.className = 'trend-symbol';
+            sym.textContent = '$' + symbol;
+            const src = document.createElement('span');
+            src.style.cssText = 'font-size:0.8rem;opacity:0.7;margin-left:0.5rem;';
+            src.textContent = source;
+            left.appendChild(sym);
+            left.appendChild(src);
+
+            const badge = document.createElement('span');
+            const cls = change >= 0 ? 'up' : 'down';
+            badge.className = 'trend-change ' + cls;
+            badge.textContent = (change >= 0 ? '+' : '') + change.toFixed(1) + '%';
+
+            div.appendChild(left);
+            div.appendChild(badge);
+            return div;
+        }
+
+        async function load() {
+            const feed = document.getElementById('liveFeed');
+            const stamp = document.getElementById('lastUpdated');
+            try {
+                const res = await fetch('/api/trends?limit=20');
+                if (!res.ok) throw new Error('API error');
+                const data = await res.json();
+                feed.innerHTML = '';
+                feed.className = '';
+
+                if (!data.trends || !data.trends.length) {
+                    feed.className = 'live-widget-empty';
+                    feed.textContent = 'No trends captured yet. The Scout is standing by... 📡';
+                    return;
+                }
+
+                data.trends.forEach(function (t) {
+                    const chg = Number(t.price_change_pct) || 0;
+                    feed.appendChild(row(t.token_symbol, t.source, chg));
+                });
+                stamp.textContent = 'Updated ' + new Date().toLocaleTimeString();
+            } catch (err) {
+                feed.className = 'live-widget-empty';
+                feed.textContent = '⚠️ Could not reach the feed: ' + String(err);
+            }
+        }
+
+        return { load: load };
+    })();
+
+    document.addEventListener('DOMContentLoaded', function () {
+        DemoFeed.load();
+        setInterval(DemoFeed.load, 30000);
+    });
+</script>
+{% endblock %}

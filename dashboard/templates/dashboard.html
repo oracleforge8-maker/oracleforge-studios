@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Overview{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h1>📊 Observatory Overview</h1>
+    <p>Real-time health of the OracleForge Studios autonomous agency.</p>
+</div>
+
+<!-- Health status hero -->
+<div class="health-hero" id="healthHero">
+    <div class="health-status">
+        <span class="status-dot" id="statusDot"></span>
+        <span id="statusText">Loading…</span>
+    </div>
+    <div class="health-summary" id="healthSummary"></div>
+</div>
+
+<!-- Quick stats -->
+<div class="stat-grid" id="statGrid">
+    <div class="stat-card"><div class="stat-label">Subscribers</div><div class="stat-value" id="statSubs">—</div></div>
+    <div class="stat-card"><div class="stat-label">Trends</div><div class="stat-value" id="statTrends">—</div></div>
+    <div class="stat-card"><div class="stat-label">Repairs</div><div class="stat-value" id="statRepairs">—</div></div>
+    <div class="stat-card"><div class="stat-label">Net $</div><div class="stat-value" id="statNet">—</div></div>
+</div>
+
+<!-- Recent activity preview -->
+<div class="card">
+    <div class="card-head">
+        <h3>📜 Recent Activity</h3>
+        <a href="/dashboard/activity" class="link">View all →</a>
+    </div>
+    <div id="activityPreview" class="activity-list">
+        <p class="muted">Loading…</p>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    // Overview page: load health + settings + activity
+    document.addEventListener('DOMContentLoaded', async function () {
+        try {
+            const [healthRes, settingsRes, activityRes] = await Promise.all([
+                fetch('/api/dashboard/health/latest'),
+                fetch('/api/dashboard/settings'),
+                fetch('/api/dashboard/activity')
+            ]);
+            const health = await healthRes.json();
+            const settings = await settingsRes.json();
+            const activity = await activityRes.json();
+
+            // Health hero
+            const dot = document.getElementById('statusDot');
+            const text = document.getElementById('statusText');
+            const overall = health.overall || 'unknown';
+            dot.className = 'status-dot ' + overall;
+            text.textContent = 'System: ' + overall.toUpperCase();
+            document.getElementById('healthSummary').textContent =
+                (health.summary ? health.summary.ok + ' ok / ' + health.summary.warning + ' warn / ' + health.summary.critical + ' crit' : 'No data yet');
+
+            // Stats
+            document.getElementById('statSubs').textContent = settings.subscriber_count ?? '—';
+            document.getElementById('statTrends').textContent = settings.trend_count ?? '—';
+            document.getElementById('statRepairs').textContent = settings.repair_count ?? '—';
+
+            // Activity preview
+            const list = document.getElementById('activityPreview');
+            list.innerHTML = '';
+            if (!activity.activity || !activity.activity.length) {
+                list.innerHTML = '<p class="muted">No activity yet.</p>';
+            } else {
+                activity.activity.slice(0, 6).forEach(function (a) {
+                    const div = document.createElement('div');
+                    div.className = 'activity-item';
+                    const icon = a.type === 'post' ? '📣' : a.type === 'repair' ? '🔧' : '🚨';
+                    div.innerHTML = '<span class="activity-icon">' + icon + '</span>' +
+                        '<span class="activity-text">' + (a.content || a.title || a.repair_type || a.type) + '</span>' +
+                        '<span class="activity-time">' + (a.created_at || '').slice(0, 16) + '</span>';
+                    list.appendChild(div);
+                });
+            }
+        } catch (err) {
+            document.getElementById('statusText').textContent = 'Error loading: ' + err;
+        }
+    });
+</script>
+{% endblock %}

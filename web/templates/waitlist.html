@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+
+{% block title %}Join the Waitlist{% endblock %}
+
+{% block content %}
+
+<!-- ================= Waitlist Header ================= -->
+<section class="hero" style="padding: 3rem 0 2rem;">
+    <div class="container">
+        <h1>Join the <span class="gradient-text">Waitlist</span></h1>
+        <p class="tagline">First 100 degens get 1 month of Pro free. 🎁</p>
+        <p class="description">
+            Drop your email. Get early access to The Radar Pro, the weekly Degen
+            Dispatch, and your personal referral link. Refer 3 friends → permanent
+            Pro access for life.
+        </p>
+    </div>
+</section>
+
+<!-- ================= Signup Form ================= -->
+<section>
+    <div class="container">
+        <div class="form-card">
+            <form id="waitlistForm" action="/api/waitlist" method="POST">
+                <div class="form-group">
+                    <label for="name">Name (optional)</label>
+                    <input type="text" id="name" name="name" placeholder="Anon">
+                </div>
+                <div class="form-group">
+                    <label for="email">Email *</label>
+                    <input type="email" id="email" name="email" placeholder="your@email.anon" required>
+                </div>
+                <div class="form-group">
+                    <label for="referred_by">Referral Code (optional)</label>
+                    <input type="text" id="referred_by" name="referred_by" placeholder="OF-xxxxxxxxxx">
+                    <small>Got a referral link? Paste the code here to credit your friend.</small>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg" style="width: 100%;">🚀 Join the Waitlist</button>
+                <p class="form-note">No spam. No financial advice. Just vibes and data.</p>
+            </form>
+            <div id="formMessage" style="margin-top: 1rem;"></div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= Referral Program ================= -->
+<section>
+    <div class="container">
+        <div class="newsletter-box">
+            <h2>Refer 3 → <span class="gradient-text">FREE Pro for Life</span></h2>
+            <p>
+                After you join, you'll get a unique referral link. Share it. When
+                3 people sign up with your code, your account is permanently
+                upgraded to The Radar Pro. The matrix rewards loyalty. 🤝
+            </p>
+            <p style="font-size: 0.9rem; opacity: 0.8;">
+                Your referral code appears right here after you sign up. 👇
+            </p>
+            <div id="referralCode" style="margin-top: 1rem; font-size: 1.2rem; font-weight: 800; color: var(--green);"></div>
+        </div>
+    </div>
+</section>
+
+<!-- ================= Contact ================= -->
+<section>
+    <div class="container text-center">
+        <h2>B2B / The <span class="gradient-text">Forge</span></h2>
+        <p style="max-width: 600px; margin: 0.5rem auto 1.5rem;">
+            Want a white-label meme coin intelligence stack for your brand or
+            launch? The Forge is our B2B arm. Tell us what you're building.
+        </p>
+        <a href="mailto:forge@oracleforge.ai" class="btn btn-purple btn-lg">forge@oracleforge.ai</a>
+    </div>
+</section>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+    // Waitlist form handler — POST to /api/waitlist, show referral code on success
+    document.addEventListener('DOMContentLoaded', function () {
+        const form = document.getElementById('waitlistForm');
+        const msg = document.getElementById('formMessage');
+        const refBox = document.getElementById('referralCode');
+        if (!form) return;
+
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+            const email = encodeURIComponent(form.email.value.trim());
+            const name = encodeURIComponent(form.name.value.trim());
+            const referredBy = encodeURIComponent(form.referred_by.value.trim());
+            try {
+                const res = await fetch('/api/waitlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: 'email=' + email + '&name=' + name + '&referred_by=' + referredBy
+                });
+                const data = await res.json();
+                if (data.success) {
+                    msg.innerHTML = '<div class="form-success">✅ You are on the list, anon! Welcome to the cult.</div>';
+                    if (data.referral_code) {
+                        refBox.textContent = 'Your referral code: ' + data.referral_code;
+                    }
+                    form.reset();
+                } else {
+                    msg.innerHTML = '<div class="form-error" style="display:block;">⚠️ ' + (data.error || 'Something went wrong') + '</div>';
+                }
+            } catch (err) {
+                msg.innerHTML = '<div class="form-error" style="display:block;">⚠️ Network error: ' + String(err) + '</div>';
+            }
+        });
+    });
+</script>
+{% endblock %}
