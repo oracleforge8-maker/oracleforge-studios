@@ -270,3 +270,54 @@ def not_found(_e: Any):
 def server_error(_e: Any):
     """Render a friendly 500 page."""
     return render_template("base.html"), 500
+# ---------------------------------------------------------------------------
+# Ping endpoint for uptime monitoring and task triggering
+# ---------------------------------------------------------------------------
+
+@app.route('/ping')
+def ping():
+    """Ping endpoint to trigger scheduled tasks.
+    
+    This is used by uptime monitoring services (like UptimeRobot) to:
+    1. Keep the Render free tier service alive
+    2. Trigger background tasks (Scout, Social posts) every 30 minutes
+    
+    Returns:
+        String: Confirmation message.
+    """
+    import threading
+    import subprocess
+    import sys
+    import os
+    
+    log.info("Ping received - triggering background tasks")
+    
+    # Run tasks in background thread (so it doesn't timeout)
+    def run_tasks():
+        try:
+            # Use the absolute path to main.py
+            main_path = os.path.join(os.path.dirname(__file__), '..', 'main.py')
+            
+            # Run Scout (scrape trends)
+            result = subprocess.run(
+                [sys.executable, main_path, '--run-scout'], 
+                capture_output=True, 
+                timeout=120
+            )
+            log.info(f"Scout task completed: {result.returncode}")
+            
+            # Run Social (post to Twitter)
+            result = subprocess.run(
+                [sys.executable, main_path, '--run-social'], 
+                capture_output=True, 
+                timeout=120
+            )
+            log.info(f"Social task completed: {result.returncode}")
+            
+        except Exception as e:
+            log.error(f"Task error: {e}")
+    
+    thread = threading.Thread(target=run_tasks)
+    thread.start()
+    
+    return "Pong! Tasks triggered in background."
