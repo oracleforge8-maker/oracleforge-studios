@@ -63,7 +63,7 @@ def make_client() -> Any:
 # Posting
 # ---------------------------------------------------------------------------
 
-def post_tweet(db: Any, content: str, dry_run: bool = True,
+def post_tweet(db: Any, content: str, dry_run: bool = False,
                post_type: str = "radar") -> Optional[int]:
     """Post a single tweet (or mock it).
 
@@ -116,7 +116,7 @@ def post_radar_posts(db: Any) -> int:
     if drafts:
         count = 0
         for post in drafts[:3]:
-            post_tweet(db, post["content"], dry_run=True, post_type="radar")
+            post_tweet(db, post["content"], dry_run=False, post_type="radar")
             count += 1
         return count
 
@@ -125,7 +125,7 @@ def post_radar_posts(db: Any) -> int:
     trends = db.latest_trends(limit=10)
     posts = fallback_social_posts(trends)
     for p in posts:
-        post_tweet(db, p, dry_run=True, post_type="radar")
+        post_tweet(db, p, dry_run=False, post_type="radar")
     return len(posts)
 
 
