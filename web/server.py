@@ -271,53 +271,244 @@ def server_error(_e: Any):
     """Render a friendly 500 page."""
     return render_template("base.html"), 500
 # ---------------------------------------------------------------------------
-# Ping endpoint for uptime monitoring and task triggering
+# Ping endpoints for uptime monitoring and task triggering
 # ---------------------------------------------------------------------------
 
-@app.route('/ping')
-def ping():
-    """Ping endpoint to trigger scheduled tasks.
-    
-    This is used by uptime monitoring services (like UptimeRobot) to:
-    1. Keep the Render free tier service alive
-    2. Trigger background tasks (Scout, Social posts) every 30 minutes
-    
+import os
+import subprocess
+import sys
+import threading
+import time
+from typing import List, Optional
+
+#: Absolute path to main.py (the CLI orchestrator)
+_MAIN_PATH = os.path.join(os.path.dirname(__file__), "..", "main.py")
+
+#: Default timeout per task (seconds)
+_TASK_TIMEOUT = 120
+
+#: Agent definitions: name -> (CLI args, description, recommended frequency)
+AGENT_TASKS: Dict[str, Dict[str, Any]] = {
+    "scout": {
+        "args": ["--run-scout"],
+        "description": "Scrape crypto trends (Twitter, Pump.fun, CMC, DEXScreener, Reddit)",
+        "frequency": "Every 4 hours",
+    },
+    "chronicler": {
+        "args": ["--run-chronicle", "--chronicle-mode", "archive"],
+        "description": "Archive data + financial tracking to JSON/SQLite",
+        "frequency": "Every 6 hours",
+    },
+    "watchtower": {
+        "args": ["--run-watchtower"],
+        "description": "Health monitoring (API, DB, social, website, logs)",
+        "frequency": "Every 30 minutes",
+    },
+    "social": {
+        "args": ["--run-social"],
+        "description": "Post to Twitter/X (The Radar)",
+        "frequency": "Every 4 hours",
+    },
+    "mechanic": {
+        "args": ["--run-mechanic"],
+        "description": "Self-healing (retry posts, reconnect DB, rotate keys)",
+        "frequency": "Every 1 hour",
+    },
+    "forge": {
+        "args": ["--run-forge", "--type", "brand"],
+        "description": "Image generation (DALL-E 3 or SVG fallback)",
+        "frequency": "On-demand",
+    },
+}
+
+
+def _run_single_task(name: str, timeout: int = _TASK_TIMEOUT) -> Dict[str, Any]:
+    """Run a single agent task via subprocess.
+
+    Args:
+        name: Agent name (must be in AGENT_TASKS).
+        timeout: Max seconds before the task is killed.
+
     Returns:
-        String: Confirmation message.
+        Dict: {"task": name, "status": "success"|"failed"|"timeout",
+               "returncode": int|None, "duration": float, "error": str|None}
     """
-    import threading
-    import subprocess
-    import sys
-    import os
-    
-    log.info("Ping received - triggering background tasks")
-    
-    # Run tasks in background thread (so it doesn't timeout)
-    def run_tasks():
-        try:
-            # Use the absolute path to main.py
-            main_path = os.path.join(os.path.dirname(__file__), '..', 'main.py')
-            
-            # Run Scout (scrape trends)
-            result = subprocess.run(
-                [sys.executable, main_path, '--run-scout'], 
-                capture_output=True, 
-                timeout=120
-            )
-            log.info(f"Scout task completed: {result.returncode}")
-            
-            # Run Social (post to Twitter)
-            result = subprocess.run(
-                [sys.executable, main_path, '--run-social'], 
-                capture_output=True, 
-                timeout=120
-            )
-            log.info(f"Social task completed: {result.returncode}")
-            
-        except Exception as e:
-            log.error(f"Task error: {e}")
-    
-    thread = threading.Thread(target=run_tasks)
+    spec = AGENT_TASKS.get(name)
+    if not spec:
+        return {"task": name, "status": "failed", "returncode": None,
+                "duration": 0.0, "error": f"unknown task: {name}"}
+
+    start = time.time()
+    log.info("▶ Task '%s' starting", name)
+    try:
+        result = subprocess.run(
+            [sys.executable, _MAIN_PATH] + spec["args"],
+            capture_output=True,
+            timeout=timeout,
+        )
+        duration = time.time() - start
+        status = "success" if result.returncode == 0 else "failed"
+        log.info("✓ Task '%s' %s (returncode=%s, %.1fs)",
+                 name, status, result.returncode, duration)
+        return {
+            "task": name,
+            "status": status,
+            "returncode": result.returncode,
+            "duration": round(duration, 2),
+            "error": None,
+        }
+    except subprocess.TimeoutExpired:
+        duration = time.time() - start
+        log.error("✗ Task '%s' timed out after %.1fs", name, duration)
+        return {
+            "task": name,
+            "status": "timeout",
+            "returncode": None,
+            "duration": round(duration, 2),
+            "error": f"timed out after {timeout}s",
+        }
+    except Exception as exc:  # noqa: BLE001
+        duration = time.time() - start
+        log.error("✗ Task '%s' failed: %s", name, exc)
+        return {
+            "task": name,
+            "status": "failed",
+            "returncode": None,
+            "duration": round(duration, 2),
+            "error": str(exc),
+        }
+
+
+def _run_tasks_in_background(task_names: List[str]) -> None:
+    """Run a list of agent tasks sequentially in a background thread.
+
+    Each task is isolated — a failure in one never stops the others.
+
+    Args:
+        task_names: List of agent names to run in order.
+    """
+    def runner() -> None:
+        for name in task_names:
+            _run_single_task(name)
+
+    thread = threading.Thread(target=runner, daemon=True)
     thread.start()
-    
-    return "Pong! Tasks triggered in background."
+
+
+def _ping_response(task_names: List[str]) -> Any:
+    """Build the JSON response for a ping endpoint.
+
+    Args:
+        task_names: List of agent names being triggered.
+
+    Returns:
+        Flask JSON response with a confirmation + task summary.
+    """
+    log.info("Ping received — triggering tasks: %s", ", ".join(task_names))
+    _run_tasks_in_background(task_names)
+    return jsonify({
+        "pong": True,
+        "triggered": task_names,
+        "message": "Tasks triggered in background.",
+        "note": "Use /ping/help for all endpoints and recommended frequencies.",
+    })
+
+
+@app.route("/ping")
+def ping():
+    """Trigger ALL agents in the background (Scout → Chronicler → Watchtower → Social → Mechanic).
+
+    Returns:
+        JSON confirmation with the list of triggered tasks.
+    """
+    return _ping_response(["scout", "chronicler", "watchtower", "social", "mechanic"])
+
+
+@app.route("/ping/all")
+def ping_all():
+    """Trigger ALL agents (same as /ping)."""
+    return _ping_response(["scout", "chronicler", "watchtower", "social", "mechanic"])
+
+
+@app.route("/ping/scout")
+def ping_scout():
+    """Trigger only The Scout (scrape trends)."""
+    return _ping_response(["scout"])
+
+
+@app.route("/ping/chronicler")
+def ping_chronicler():
+    """Trigger only The Chronicler (archive + financials)."""
+    return _ping_response(["chronicler"])
+
+
+@app.route("/ping/watchtower")
+def ping_watchtower():
+    """Trigger only The Watchtower (health check)."""
+    return _ping_response(["watchtower"])
+
+
+@app.route("/ping/social")
+def ping_social():
+    """Trigger only The Social agent (post to Twitter)."""
+    return _ping_response(["social"])
+
+
+@app.route("/ping/mechanic")
+def ping_mechanic():
+    """Trigger only The Mechanic (self-healing)."""
+    return _ping_response(["mechanic"])
+
+
+@app.route("/ping/forge")
+def ping_forge():
+    """Trigger only The Forge (image generation)."""
+    return _ping_response(["forge"])
+
+
+@app.route("/ping/help")
+def ping_help():
+    """Documentation page listing all ping endpoints and recommended frequencies.
+
+    Returns:
+        JSON with all endpoints, descriptions, and recommended frequencies.
+    """
+    endpoints = []
+    for name, spec in AGENT_TASKS.items():
+        endpoints.append({
+            "endpoint": f"/ping/{name}",
+            "task": name,
+            "description": spec["description"],
+            "recommended_frequency": spec["frequency"],
+        })
+    endpoints.append({
+        "endpoint": "/ping",
+        "task": "all",
+        "description": "Trigger ALL agents (Scout → Chronicler → Watchtower → Social → Mechanic)",
+        "recommended_frequency": "Every 30 minutes (keep-alive)",
+    })
+    endpoints.append({
+        "endpoint": "/ping/all",
+        "task": "all",
+        "description": "Same as /ping — trigger ALL agents",
+        "recommended_frequency": "Every 30 minutes (keep-alive)",
+    })
+    endpoints.append({
+        "endpoint": "/ping/help",
+        "task": "docs",
+        "description": "This documentation page",
+        "recommended_frequency": "As needed",
+    })
+
+    return jsonify({
+        "service": "OracleForge Studios",
+        "endpoints": endpoints,
+        "uptimerobot_recommendations": [
+            {"endpoint": "/ping/watchtower", "purpose": "Health monitoring", "frequency": "Every 30 minutes"},
+            {"endpoint": "/ping/scout", "purpose": "Scrape trends", "frequency": "Every 4 hours"},
+            {"endpoint": "/ping/social", "purpose": "Post to Twitter", "frequency": "Every 4 hours"},
+            {"endpoint": "/ping/chronicler", "purpose": "Archive data", "frequency": "Every 6 hours"},
+            {"endpoint": "/ping/mechanic", "purpose": "Self-healing", "frequency": "Every 1 hour"},
+            {"endpoint": "/ping/forge", "purpose": "Image generation", "frequency": "On-demand"},
+        ],
+    })
