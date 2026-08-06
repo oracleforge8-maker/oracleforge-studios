@@ -97,7 +97,7 @@ def pricing():
 def blog():
     """Render the blog page with the latest 5 posts."""
     db = _db()
-    posts = db.latest_posts(limit=5)
+    posts = db.latest_posts(limit=10)
     # Add a derived title for display
     for p in posts:
         p["title"] = _post_title(p)
@@ -238,6 +238,66 @@ def stripe_webhook():
 
 
 # ---------------------------------------------------------------------------
+# Patreon webhook (patron membership)
+# ---------------------------------------------------------------------------
+
+@app.route("/api/patreon/webhook", methods=["POST"])
+def patreon_webhook():
+    """Handle Patreon webhook events (members:create / update / delete).
+
+    Verifies the HMAC-SHA1 signature from the X-Patreon-Signature header,
+    fetches full patron details from the Patreon API, and upserts them into
+    the patrons table.
+
+    Returns:
+        JSON: {"received": True} on success, 400 on verification failure.
+    """
+    payload = request.get_data()
+    signature = request.headers.get("X-Patreon-Signature", "")
+
+    from src.patreon.webhook import verify_signature, parse_event
+    if not verify_signature(payload, signature):
+        log.error("Patreon webhook signature verification failed")
+        return jsonify({"error": "invalid signature"}), 400
+
+    event = parse_event(payload)
+    if not event:
+        log.warning("Patreon webhook could not be parsed")
+        return jsonify({"received": True}), 200  # ack to avoid retries
+
+    db = _db()
+    event_type = event["event"]
+    member_id = event["member_id"]
+    patron = event.get("patron")
+
+    log.info("Patreon webhook: %s for member %s", event_type, member_id)
+
+    if event_type == "members:delete":
+        db.delete_patron(member_id)
+    elif patron:
+        # Normalize status: Patreon uses 'active_patron' | 'former_patron' | 'declined_patron'
+        raw_status = patron.get("status", "active_patron")
+        status = {
+            "active_patron": "active",
+            "former_patron": "canceled",
+            "declined_patron": "expired",
+        }.get(raw_status, "active")
+        db.upsert_patron({
+            "patreon_id": patron.get("patreon_id") or member_id,
+            "email": patron.get("email"),
+            "full_name": patron.get("full_name"),
+            "tier": patron.get("tier"),
+            "tier_level": patron.get("tier_level"),
+            "status": status,
+        })
+        log.info("Patreon patron stored: %s (tier %s)", member_id, patron.get("tier_level"))
+    else:
+        log.warning("Patreon webhook: no patron details fetched for %s", member_id)
+
+    return jsonify({"received": True})
+
+
+# ---------------------------------------------------------------------------
 # Helpers
 # ---------------------------------------------------------------------------
 
@@ -339,7 +399,7 @@ def _run_single_task(name: str, timeout: int = _TASK_TIMEOUT) -> Dict[str, Any]:
                 "duration": 0.0, "error": f"unknown task: {name}"}
 
     start = time.time()
-    log.info("▶ Task '%s' starting", name)
+    log.info("[PING] Task '%s' starting", name)
     try:
         result = subprocess.run(
             [sys.executable, _MAIN_PATH] + spec["args"],
@@ -348,7 +408,7 @@ def _run_single_task(name: str, timeout: int = _TASK_TIMEOUT) -> Dict[str, Any]:
         )
         duration = time.time() - start
         status = "success" if result.returncode == 0 else "failed"
-        log.info("✓ Task '%s' %s (returncode=%s, %.1fs)",
+        log.info("[PING] Task '%s' %s (returncode=%s, %.1fs)",
                  name, status, result.returncode, duration)
         return {
             "task": name,
@@ -359,7 +419,7 @@ def _run_single_task(name: str, timeout: int = _TASK_TIMEOUT) -> Dict[str, Any]:
         }
     except subprocess.TimeoutExpired:
         duration = time.time() - start
-        log.error("✗ Task '%s' timed out after %.1fs", name, duration)
+        log.error("[PING] Task '%s' timed out after %.1fs", name, duration)
         return {
             "task": name,
             "status": "timeout",
@@ -369,7 +429,7 @@ def _run_single_task(name: str, timeout: int = _TASK_TIMEOUT) -> Dict[str, Any]:
         }
     except Exception as exc:  # noqa: BLE001
         duration = time.time() - start
-        log.error("✗ Task '%s' failed: %s", name, exc)
+        log.error("[PING] Task '%s' failed: %s", name, exc)
         return {
             "task": name,
             "status": "failed",
