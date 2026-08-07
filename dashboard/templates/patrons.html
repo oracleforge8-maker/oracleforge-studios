@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block title %}Patrons{% endblock %}
+{% block content %}
+<div class="page-head">
+    <h1>🫂 Patrons</h1>
+    <p>Patreon subscribers, tiers, and revenue.</p>
+</div>
+
+<!-- Tier summary -->
+<div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">Forge Supporter (T1)</div><div class="stat-value" id="tier1">—</div></div>
+    <div class="stat-card"><div class="stat-label">Meme Master (T2)</div><div class="stat-value" id="tier2">—</div></div>
+    <div class="stat-card"><div class="stat-label">Forge Master (T3)</div><div class="stat-value" id="tier3">—</div></div>
+    <div class="stat-card"><div class="stat-label">Total Active</div><div class="stat-value" id="totalActive">—</div></div>
+    <div class="stat-card"><div class="stat-label">Patreon Revenue</div><div class="stat-value" id="patreonRevenue">—</div></div>
+</div>
+
+<!-- Recent patrons -->
+<div class="card">
+    <div class="card-head"><h3>Recent Patrons</h3></div>
+    <div id="patronList" class="patron-list">
+        <p class="muted">Loading…</p>
+    </div>
+</div>
+
+<!-- Tier benefits -->
+<div class="card">
+    <div class="card-head"><h3>Tier Benefits</h3></div>
+    <div class="tier-benefits">
+        <div class="tier-benefit"><strong>Tier 1 — Forge Supporter:</strong> Early trend reports</div>
+        <div class="tier-benefit"><strong>Tier 2 — Meme Master:</strong> Weekly PDF reports + Discord access</div>
+        <div class="tier-benefit"><strong>Tier 3 — Forge Master:</strong> Everything + custom analysis</div>
+    </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+    document.addEventListener('DOMContentLoaded', async function () {
+        try {
+            const res = await fetch('/api/dashboard/patrons');
+            const data = await res.json();
+
+            document.getElementById('tier1').textContent = data.tiers['1'] || 0;
+            document.getElementById('tier2').textContent = data.tiers['2'] || 0;
+            document.getElementById('tier3').textContent = data.tiers['3'] || 0;
+            document.getElementById('totalActive').textContent = data.total_active || 0;
+            document.getElementById('patreonRevenue').textContent = '$' + (data.revenue_summary.patreon_revenue || 0).toFixed(2);
+
+            const list = document.getElementById('patronList');
+            list.innerHTML = '';
+            if (!data.recent || !data.recent.length) {
+                list.innerHTML = '<p class="muted">No patrons yet. Webhooks will populate this automatically.</p>';
+                return;
+            }
+            data.recent.forEach(function (p) {
+                const div = document.createElement('div');
+                div.className = 'patron-item';
+                const tierName = p.tier || 'Unknown';
+                const status = p.status || 'unknown';
+                div.innerHTML = '<span class="patron-name">' + (p.full_name || p.email || p.patreon_id) + '</span>' +
+                    '<span class="patron-tier">' + tierName + '</span>' +
+                    '<span class="patron-status ' + status + '">' + status + '</span>' +
+                    '<span class="patron-time">' + (p.last_sync || '').slice(0, 16) + '</span>';
+                list.appendChild(div);
+            });
+        } catch (err) {
+            document.getElementById('patronList').innerHTML = '<p class="muted">Error: ' + err + '</p>';
+        }
+    });
+</script>
+{% endblock %}

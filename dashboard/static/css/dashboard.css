@@ -268,6 +268,25 @@ body {
 .fin-amount { font-weight: 700; min-width: 90px; text-align: right; }
 .fin-time { font-size: 0.75rem; opacity: 0.6; min-width: 100px; text-align: right; }
 
+/* ---------- Patrons ---------- */
+.patron-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.6rem 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+.patron-name { font-weight: 700; color: var(--white); flex: 1; }
+.patron-tier { min-width: 140px; color: var(--green); }
+.patron-status { font-size: 0.7rem; font-weight: 800; padding: 0.15rem 0.6rem; border-radius: 6px; min-width: 80px; text-align: center; }
+.patron-status.active { color: var(--green); background: rgba(0,255,136,0.12); }
+.patron-status.canceled { color: var(--yellow); background: rgba(255,170,0,0.12); }
+.patron-status.expired { color: var(--red); background: rgba(255,85,85,0.12); }
+.patron-time { font-size: 0.75rem; opacity: 0.6; min-width: 100px; text-align: right; }
+.tier-benefits { display: grid; gap: 0.6rem; }
+.tier-benefit { padding: 0.5rem 0.8rem; background: rgba(0,255,136,0.05); border-radius: 8px; }
+
 /* ---------- Vault ---------- */
 .service-item {
     display: flex;

@@ -326,8 +326,197 @@
             }
         }
 
+         // Hydrate on load, then refresh every 60 seconds.
+         loadGainers();
+         setInterval(loadGainers, POLL_MS);
+    }
+
+    // ---------- Pump.fun Trending ----------
+    // Homepage card grid of trending Pump.fun meme coins.
+    // Polls /api/pump-trending every 60s, renders each token as a card with
+    // a momentum progress bar (0-100). Coins with momentum > 70 get a
+    // "high-momentum" highlight class. All DOM updates use textContent so
+    // the grid stays XSS-safe.
+    const pumpGrid = document.getElementById('pumpTrendingGrid');
+
+    if (pumpGrid) {
+        const POLL_MS = 60000;
+        const HIGH_MOMENTUM = 70;
+
+        function fmtPricePump(price) {
+            if (price === null || price === undefined || isNaN(Number(price))) return '—';
+            const n = Number(price);
+            if (!n) return '$0.00';
+            const opts = Math.abs(n) >= 100
+                ? {minimumFractionDigits: 2, maximumFractionDigits: 2}
+                : Math.abs(n) >= 1
+                ? {minimumFractionDigits: 2, maximumFractionDigits: 4}
+                : {minimumFractionDigits: 4, maximumFractionDigits: 8};
+            return '$' + n.toLocaleString('en-US', opts);
+        }
+
+        function fmtMarketCap(mc) {
+            if (mc === null || mc === undefined || isNaN(Number(mc))) return '—';
+            const n = Number(mc);
+            if (!n) return '$0';
+            if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+            if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+            if (n >= 1e3) return '$' + (n / 1e3).toFixed(2) + 'K';
+            return '$' + n.toFixed(0);
+        }
+
+        function fmtVolume(vol) {
+            if (vol === null || vol === undefined || isNaN(Number(vol))) return '—';
+            const n = Number(vol);
+            if (!n) return '$0';
+            if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+            if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+            return '$' + n.toFixed(0);
+        }
+
+        function momentumBarClass(m) {
+            if (m >= 70) return 'high';
+            if (m >= 40) return 'mid';
+            return 'low';
+        }
+
+        function renderPumpCards(tokens) {
+            pumpGrid.innerHTML = '';
+            const frag = document.createDocumentFragment();
+
+            (tokens || []).forEach(function (token) {
+                const card = document.createElement('div');
+                const momentum = Number(token.momentum) || 0;
+                card.className = 'pump-card';
+                if (momentum > HIGH_MOMENTUM) {
+                    card.classList.add('high-momentum');
+                }
+
+                // --- Header: symbol + price ---
+                const header = document.createElement('div');
+                header.className = 'pump-card-header';
+
+                const symCol = document.createElement('div');
+                const sym = document.createElement('span');
+                sym.className = 'pump-symbol';
+                sym.textContent = (token.symbol || '—').toUpperCase();
+                symCol.appendChild(sym);
+                const name = document.createElement('small');
+                name.className = 'pump-name';
+                name.textContent = token.name || '';
+                symCol.appendChild(name);
+
+                const price = document.createElement('span');
+                price.className = 'pump-card-price';
+                price.textContent = fmtPricePump(token.price);
+
+                header.appendChild(symCol);
+                header.appendChild(price);
+                card.appendChild(header);
+
+                // --- Launch time ---
+                const launched = document.createElement('div');
+                launched.className = 'pump-launched';
+                launched.textContent = 'Launched ' + (token.launched || 'Recently');
+                card.appendChild(launched);
+
+                // --- Momentum label + value row ---
+                const momentumRow = document.createElement('div');
+                momentumRow.className = 'momentum-row';
+
+                const ml = document.createElement('span');
+                ml.className = 'momentum-label';
+                ml.textContent = 'Momentum';
+                momentumRow.appendChild(ml);
+
+                const value = document.createElement('span');
+                value.className = 'momentum-value';
+                value.textContent = momentum.toFixed(1);
+                momentumRow.appendChild(value);
+
+                card.appendChild(momentumRow);
+
+                // --- Momentum progress bar ---
+                const momentumWrap = document.createElement('div');
+                momentumWrap.className = 'momentum-bar-wrap ' + momentumBarClass(momentum);
+
+                const bar = document.createElement('div');
+                bar.className = 'momentum-bar ' + momentumBarClass(momentum);
+                bar.style.width = Math.max(4, Math.min(100, momentum)) + '%';
+
+                momentumWrap.appendChild(bar);
+                card.appendChild(momentumWrap);
+
+                // --- Meta: market cap + volume ---
+                const meta = document.createElement('div');
+                meta.className = 'pump-card-meta';
+
+                const mcItem = document.createElement('span');
+                mcItem.className = 'meta-item';
+                mcItem.innerHTML = 'MC: <span>' + fmtMarketCap(token.marketCapUsd) + '</span>';
+
+                const volItem = document.createElement('div');
+                volItem.className = 'meta-item';
+                volItem.innerHTML = 'Vol: <span>' + fmtVolume(token.volumeUsd) + '</span>';
+
+                meta.appendChild(mcItem);
+                meta.appendChild(volItem);
+                card.appendChild(meta);
+
+                // --- Pump.fun link ---
+                if (token.url) {
+                    const link = document.createElement('a');
+                    link.href = token.url;
+                    link.target = '_blank';
+                    link.rel = 'noopener noreferrer';
+                    link.className = 'pump-link';
+                    link.textContent = 'View on Pump.fun →';
+                    card.appendChild(link);
+                }
+
+                frag.appendChild(card);
+            });
+
+            pumpGrid.appendChild(frag);
+
+            // Updated timestamp
+            const updated = document.getElementById('pumpUpdated');
+            if (updated) {
+                updated.textContent = 'Updated ' +
+                    new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) +
+                    ' · auto-refreshes every 60s';
+            }
+        }
+
+        function showPumpLoading(msg) {
+            pumpGrid.innerHTML = '';
+            const div = document.createElement('div');
+            div.className = 'pump-loading';
+            div.textContent = msg;
+            pumpGrid.appendChild(div);
+            const updated = document.getElementById('pumpUpdated');
+            if (updated) updated.textContent = '';
+        }
+
+        async function loadPumpTrending() {
+            showPumpLoading('Scanning the blockchain for fresh degens… 🔍');
+            try {
+                const res = await fetch('/api/pump-trending', {cache: 'no-store'});
+                if (!res.ok) throw new Error('Pump trending API returned ' + res.status);
+                const data = await res.json();
+                if (!data.tokens || !data.tokens.length) {
+                    showPumpLoading('No trending tokens right now. The memecoins are sleeping… 😴');
+                    return;
+                }
+                renderPumpCards(data.tokens);
+            } catch (err) {
+                console.warn('Pump trending fetch failed:', err);
+                showPumpLoading('⚠️ Could not reach the pump feed: ' + String(err));
+            }
+        }
+
         // Hydrate on load, then refresh every 60 seconds.
-        loadGainers();
-        setInterval(loadGainers, POLL_MS);
+        loadPumpTrending();
+        setInterval(loadPumpTrending, POLL_MS);
     }
 })();

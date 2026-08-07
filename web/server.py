@@ -13,6 +13,9 @@ Pages:
 
 APIs:
     GET  /api/trends?limit=N     Latest trends (for live widgets)
+    GET  /api/ticker             Homepage market ticker (BTC/ETH/SOL + gainers)
+    GET  /api/top-gainers        Top 10 coins by 30m momentum
+    GET  /api/pump-trending      Trending Pump.fun meme coins (Three.ws)
     POST /api/waitlist           Add subscriber (email, name, referred_by)
     POST /api/newsletter         Subscribe to newsletter (email)
 
@@ -23,6 +26,7 @@ Run:
 from __future__ import annotations
 
 import re
+from datetime import datetime, timezone
 from typing import Any, Dict, List
 
 import requests
@@ -470,6 +474,175 @@ def api_top_gainers():
     except Exception as exc:  # noqa: BLE001 — never break the homepage
         log.warning("Top gainers: CoinGecko fetch failed (%s) — serving mock data", exc)
         return jsonify(_mock_gainers_data())
+
+
+# ---------------------------------------------------------------------------
+# Pump.fun Trending (Three.ws)
+# ---------------------------------------------------------------------------
+# Public schema (returned by /api/pump-trending):
+#     {
+#         "tokens": [
+#             {"symbol": "TROLL", "name": "TROLL", "price": 0.0374,
+#              "momentum": 80.6, "launched": "5 min ago",
+#              "marketCapUsd": 37389476.99, "volumeUsd": 12984.03,
+#              "url": "https://pump.fun/coin/..."},
+#         ],
+#         "window": "1h",
+#         "ts": "2026-08-07T17:50:45.805Z",
+#         "sources": ["pumpfun", "dexscreener"],
+#         "note": "...",
+#         "count": 1
+#     }
+#
+# Live data is pulled from the free Three.ws API (no key required). On any
+# upstream failure we fall back to branded mock data so the section always
+# renders — the same graceful-degradation pattern used by the ticker.
+# Refreshed by the frontend every 60 seconds.
+
+#: Three.ws API base URL (free, no API key)
+THREEWS_BASE = "https://three.ws/api"
+
+#: Per-request hard timeout (seconds) so a slow upstream never stalls the page
+_THREEWS_TIMEOUT = 10
+
+#: Assumed token supply for deriving a synthetic per-token price from market cap.
+# Pump.fun meme coins typically float ~1 B tokens; we use this to convert
+# marketCapUsd → a notional price (since the Three.ws API does not expose a
+# per-token price directly).
+_PUMP_SUPPLY = 1_000_000_000
+
+
+def _time_since(ts_str: str) -> str:
+    """Format an ISO-8601 timestamp as a short relative duration.
+
+    Args:
+        ts_str: ISO-8601 timestamp (e.g. Three.ws ``ts`` field).
+
+    Returns:
+        Short label like "12 min ago", "3h ago", "1d ago", or "Recently".
+    """
+    try:
+        ts = datetime.fromisoformat(ts_str.replace("Z", "+00:00"))
+        now = datetime.now(timezone.utc)
+        secs = max(0, (now - ts).total_seconds())
+        if secs < 60:
+            return f"{int(secs)}s ago"
+        if secs < 3600:
+            return f"{int(secs / 60)} min ago"
+        if secs < 86400:
+            return f"{int(secs / 3600)}h ago"
+        return f"{int(secs / 86400)}d ago"
+    except (ValueError, TypeError, AttributeError):
+        return "Recently"
+
+
+def _threews_pump_tokens() -> Dict[str, Any]:
+    """Fetch trending Pump.fun tokens from Three.ws and normalize them.
+
+    The Three.ws API returns raw token data with a ``score`` (0-100 momentum)
+    and ``marketCapUsd``. We normalize each token into the schema above:
+
+    - ``momentum`` ← ``score`` (clamped to 0–100)
+    - ``price`` ← ``marketCapUsd / _PUMP_SUPPLY`` (synthetic per-token price)
+    - ``launched`` ← relative time since the data timestamp ``ts``
+
+    Returns:
+        Normalized payload dict matching the /api/pump-trending schema.
+    """
+    resp = requests.get(
+        f"{THREEWS_BASE}/crypto/trending",
+        params={"window": "1h", "source": "pump.fun"},
+        headers={"accept": "application/json"},
+        timeout=_THREEWS_TIMEOUT,
+    )
+    resp.raise_for_status()
+    raw = resp.json()
+
+    tokens: List[Dict[str, Any]] = []
+    for t in raw.get("tokens", []):
+        mc = float(t.get("marketCapUsd", 0) or 0)
+        score = float(t.get("score", 0) or 0)
+        tokens.append({
+            "symbol": (t.get("symbol") or "???").upper(),
+            "name": t.get("name") or "",
+            "price": round(mc / _PUMP_SUPPLY, 8),
+            "momentum": round(max(0.0, min(100.0, score)), 1),
+            "launched": _time_since(raw.get("ts", "")),
+            "marketCapUsd": round(mc, 2),
+            "volumeUsd": round(float(t.get("volumeUsd", 0) or 0), 2),
+            "url": t.get("url") or "",
+        })
+
+    return {
+        "tokens": tokens,
+        "window": raw.get("window", "1h"),
+        "ts": raw.get("ts", ""),
+        "sources": raw.get("sources", []),
+        "note": raw.get("note", ""),
+        "count": len(tokens),
+    }
+
+
+def _mock_pump_tokens() -> Dict[str, Any]:
+    """Branded fallback for the Pump.fun trending section.
+
+    Returns sample tokens with all schema fields so the section always
+    renders something meaningful and visually consistent with the live schema.
+    Two tokens have momentum > 70 to showcase the highlight style.
+
+    Returns:
+        Dict matching the /api/pump-trending schema with sample data.
+    """
+    now_ts = datetime.now(timezone.utc).isoformat(timespec="seconds").replace("+00:00", "Z")
+    sample = [
+        {"symbol": "DOGEGECKO", "name": "DogeGecko",  "mc": 62_000_000,  "vol": 1_800_000, "score": 92.3, "ago": "6 min"},
+        {"symbol": "BONK",      "name": "Bonk",       "mc": 48_500_000,  "vol":   892_000, "score": 88.1, "ago": "8 min"},
+        {"symbol": "TROLL",     "name": "Troll",      "mc": 37_389_476,  "vol":    12_984, "score": 80.6, "ago": "12 min"},
+        {"symbol": "BOME",      "name": "Book of Memecoin", "mc": 22_100_000, "vol": 156_000, "score": 76.3, "ago": "18 min"},
+        {"symbol": "WIF",       "name": "Dogwifhat",  "mc": 1_880_000_000, "vol": 2_100_000, "score": 72.1, "ago": "5 min"},
+        {"symbol": "PEPE",      "name": "Pepe",       "mc":   750_000_000, "vol":   880_000, "score": 61.4, "ago": "25 min"},
+        {"symbol": "FLOKI",     "name": "Floki",      "mc": 1_100_000_000, "vol":   450_000, "score": 55.7, "ago": "32 min"},
+        {"symbol": "POGAI",     "name": "PogAI",      "mc":     2_400_000, "vol":     7_200, "score": 44.2, "ago": "41 min"},
+    ]
+    tokens: List[Dict[str, Any]] = []
+    for s in sample:
+        tokens.append({
+            "symbol": s["symbol"],
+            "name": s["name"],
+            "price": round(s["mc"] / _PUMP_SUPPLY, 8),
+            "momentum": s["score"],
+            "launched": f"{s['ago']} ago",
+            "marketCapUsd": round(s["mc"], 2),
+            "volumeUsd": round(s["vol"], 2),
+            "url": f"https://pump.fun/s/{s['symbol']}",
+        })
+    return {
+        "tokens": tokens,
+        "window": "1h",
+        "ts": now_ts,
+        "sources": ["pumpfun", "mock"],
+        "note": "Showing sample data — live API unavailable.",
+        "count": len(tokens),
+    }
+
+
+@app.route("/api/pump-trending")
+def api_pump_trending():
+    """Trending Pump.fun tokens (1h window) from the Three.ws API.
+
+    Fetches live data from the free Three.ws API and normalizes it into a
+    compact schema (symbol, price, momentum 0-100, launched, market cap,
+    volume). On any upstream failure returns branded mock data so the
+    section always renders. Refreshed by the frontend every 60 seconds.
+
+    Returns:
+        JSON: {"tokens": [...], "window", "ts", "sources", "note", "count"}
+    """
+    try:
+        return jsonify(_threews_pump_tokens())
+    except Exception as exc:  # noqa: BLE001 — never break the homepage
+        log.warning("Pump trending: Three.ws fetch failed (%s) — serving mock data", exc)
+        return jsonify(_mock_pump_tokens())
 
 
 @app.route("/api/waitlist", methods=["POST"])

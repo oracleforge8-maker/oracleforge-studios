@@ -19,6 +19,7 @@ discord.py>=2.3.2             # Discord bot (auto-posting)
 
 # --- Payments ---
 stripe>=10.0.0                # Stripe Checkout / webhooks (test mode)
+patreon>=0.8.1                # Patreon API client (patron tiers)
 
 # --- Reporting / Imaging ---
 matplotlib>=3.9.1             # Weekly report charts (The Chronicler)

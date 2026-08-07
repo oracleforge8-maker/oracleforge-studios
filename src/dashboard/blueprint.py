@@ -373,6 +373,51 @@ def api_finance():
 
 
 # ---------------------------------------------------------------------------
+# Patrons API (Patreon integration)
+# ---------------------------------------------------------------------------
+
+@bp.route("/dashboard/patrons")
+@login_required
+def dashboard_patrons():
+    """Patron management page."""
+    return render_template("patrons.html", active="patrons")
+
+
+@bp.route("/api/dashboard/patrons")
+@login_required
+def api_patrons():
+    """Return patron data: totals by tier, recent patrons, revenue summary.
+
+    Returns:
+        JSON: {tiers, recent, summary}
+    """
+    db = _db()
+    patrons = db.list_patrons(limit=100)
+    counts = db.patron_counts_by_tier()
+    total_active = db.patron_total_active()
+
+    # Revenue summary from financial_records (patreon category)
+    revenue_rows = db.query(
+        "SELECT COALESCE(SUM(amount), 0) AS total FROM financial_records "
+        "WHERE record_type = 'revenue' AND category = 'patreon'"
+    )
+    patreon_revenue = float(revenue_rows[0]["total"] if revenue_rows else 0)
+
+    return jsonify({
+        "tiers": {
+            "1": counts.get(1, 0),
+            "2": counts.get(2, 0),
+            "3": counts.get(3, 0),
+        },
+        "total_active": total_active,
+        "recent": patrons[:20],
+        "revenue_summary": {
+            "patreon_revenue": patreon_revenue,
+        },
+    })
+
+
+# ---------------------------------------------------------------------------
 # Vault API
 # ---------------------------------------------------------------------------
 

@@ -95,6 +95,37 @@ def test_api_top_gainers(client):
         assert isinstance(g["change_24h"], (int, float))
 
 
+def test_api_pump_trending(client, monkeypatch):
+    """GET /api/pump-trending returns the normalized Pump.fun schema.
+
+    The endpoint normally calls the free Three.ws API live. In the test
+    environment we force the mock-fallback path (by making the live fetch
+    raise) so the test is deterministic and network-free, while still
+    validating the response shape the frontend depends on.
+    """
+    import web.server as server
+
+    def _always_fail(*args, **kwargs):
+        raise RuntimeError("no network in tests")
+
+    monkeypatch.setattr(server, "_threews_pump_tokens", _always_fail)
+
+    resp = client.get("/api/pump-trending")
+    assert resp.status_code == 200
+    data = resp.get_json()
+
+    assert "tokens" in data
+    assert isinstance(data["tokens"], list)
+    assert data["window"]
+    assert data["count"] == len(data["tokens"])
+    for token in data["tokens"]:
+        assert token["symbol"]
+        assert isinstance(token["price"], (int, float))
+        assert isinstance(token["momentum"], (int, float))
+        assert 0 <= token["momentum"] <= 100
+        assert token["launched"]
+
+
 def test_api_waitlist_valid(client, db):
     """POST /api/waitlist with a valid email should succeed."""
     resp = client.post("/api/waitlist", data={"email": "anon@example.com"})

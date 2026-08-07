@@ -120,6 +120,22 @@ CREATE TABLE IF NOT EXISTS settings (
     key             TEXT PRIMARY KEY,
     value           TEXT
 );
+
+CREATE TABLE IF NOT EXISTS patrons (
+    id              INTEGER PRIMARY KEY AUTOINCREMENT,
+    patreon_id      TEXT NOT NULL UNIQUE,       -- Patreon member ID
+    email           TEXT,
+    full_name       TEXT,
+    tier            TEXT,                       -- Forge Supporter | Meme Master | Forge Master
+    tier_level      INTEGER,                    -- 1 | 2 | 3
+    status          TEXT NOT NULL DEFAULT 'active',  -- active | canceled | expired
+    joined_at       TEXT,
+    updated_at      TEXT,
+    last_sync       TEXT                        -- last webhook/API sync time
+);
+
+CREATE INDEX IF NOT EXISTS idx_patrons_tier_level ON patrons(tier_level);
+CREATE INDEX IF NOT EXISTS idx_patrons_status ON patrons(status);
 """
 
 
@@ -163,8 +179,9 @@ class Database:
     def _migrate(self) -> None:
         """Apply lightweight migrations for pre-existing databases.
 
-        Currently adds the ``retry_count`` column to ``posts`` if missing
-        (required by The Mechanic's retry logic).
+        Adds:
+        - ``retry_count`` column to ``posts`` if missing (The Mechanic).
+        - ``patrons`` table if missing (Patreon integration).
         """
         cols = {row["name"] for row in self.conn.execute("PRAGMA table_info(posts)")}
         if "retry_count" not in cols:
@@ -172,6 +189,7 @@ class Database:
                 "ALTER TABLE posts ADD COLUMN retry_count INTEGER NOT NULL DEFAULT 0"
             )
             log.info("Migration: added posts.retry_count")
+        # patrons table is created by SCHEMA's CREATE TABLE IF NOT EXISTS
 
     # -- generic helpers ----------------------------------------------------
 
@@ -586,6 +604,134 @@ class Database:
         """
         row = self.query_one("SELECT value FROM settings WHERE key = ?", (key,))
         return row["value"] if row else default
+
+    # -- patrons (Patreon integration) -----------------------------------------
+
+    def upsert_patron(self, patron: Dict[str, Any]) -> Dict[str, Any]:
+        """Insert or update a patron by Patreon ID.
+
+        Args:
+            patron: Dict with keys: patreon_id, email, full_name, tier,
+                    tier_level, status, joined_at.
+
+        Returns:
+            The stored patron row dict.
+        """
+        now = _now()
+        patreon_id = patron.get("patreon_id", "")
+        if not patreon_id:
+            raise ValueError("patron requires patreon_id")
+
+        existing = self.query_one(
+            "SELECT id FROM patrons WHERE patreon_id = ?", (patreon_id,)
+        )
+        if existing:
+            self.execute(
+                """UPDATE patrons SET
+                       email = ?, full_name = ?, tier = ?, tier_level = ?,
+                       status = ?, joined_at = COALESCE(?, joined_at),
+                       updated_at = ?, last_sync = ?
+                   WHERE patreon_id = ?""",
+                (
+                    patron.get("email"),
+                    patron.get("full_name"),
+                    patron.get("tier"),
+                    patron.get("tier_level"),
+                    patron.get("status", "active"),
+                    patron.get("joined_at"),
+                    now,
+                    now,
+                    patreon_id,
+                ),
+            )
+        else:
+            self.execute(
+                """INSERT INTO patrons
+                   (patreon_id, email, full_name, tier, tier_level, status,
+                    joined_at, updated_at, last_sync)
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    patreon_id,
+                    patron.get("email"),
+                    patron.get("full_name"),
+                    patron.get("tier"),
+                    patron.get("tier_level"),
+                    patron.get("status", "active"),
+                    patron.get("joined_at"),
+                    now,
+                    now,
+                ),
+            )
+
+        return self.query_one(
+            "SELECT * FROM patrons WHERE patreon_id = ?", (patreon_id,)
+        ) or {}
+
+    def get_patron(self, patreon_id: str) -> Optional[Dict[str, Any]]:
+        """Fetch a patron by Patreon ID.
+
+        Args:
+            patreon_id: Patreon member ID.
+
+        Returns:
+            Patron row dict or None.
+        """
+        return self.query_one(
+            "SELECT * FROM patrons WHERE patreon_id = ?", (patreon_id,)
+        )
+
+    def list_patrons(self, limit: int = 100, status: Optional[str] = None) -> List[Dict[str, Any]]:
+        """Fetch patrons, optionally filtered by status.
+
+        Args:
+            limit: Max rows.
+            status: Optional status filter (active/canceled/expired).
+
+        Returns:
+            List of patron dicts, newest first by last_sync.
+        """
+        sql = "SELECT * FROM patrons"
+        params: List[Any] = []
+        if status:
+            sql += " WHERE status = ?"
+            params.append(status)
+        sql += f" ORDER BY last_sync DESC LIMIT {int(limit)}"
+        return self.query(sql, tuple(params))
+
+    def delete_patron(self, patreon_id: str) -> bool:
+        """Delete a patron by Patreon ID.
+
+        Args:
+            patreon_id: Patreon member ID.
+
+        Returns:
+            True if a row was deleted.
+        """
+        cur = self.execute(
+            "DELETE FROM patrons WHERE patreon_id = ?", (patreon_id,)
+        )
+        return cur.rowcount > 0
+
+    def patron_counts_by_tier(self) -> Dict[int, int]:
+        """Count active patrons per tier level.
+
+        Returns:
+            Dict: tier_level -> count of active patrons.
+        """
+        rows = self.query(
+            "SELECT tier_level, COUNT(*) AS n FROM patrons "
+            "WHERE status = 'active' AND tier_level IS NOT NULL GROUP BY tier_level"
+        )
+        return {int(row["tier_level"]): int(row["n"]) for row in rows}
+
+    def patron_total_active(self) -> int:
+        """Count all active patrons.
+
+        Returns:
+            Total active patron rows.
+        """
+        row = self.query_one("SELECT COUNT(*) AS n FROM patrons WHERE status = 'active'")
+        return int(row["n"]) if row else 0
 
     # -- misc -------------------------------------------------------------------
 

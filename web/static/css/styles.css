@@ -932,3 +932,193 @@ section { margin-bottom: 4rem; }
     .gainers-table th,
     .gainers-table td { padding: 0.6rem 0.6rem; font-size: 0.8rem; }
 }
+
+/* ============================================================
+   Pump.fun Trending Section
+   ============================================================ */
+
+.pump-trending-section {
+    margin-bottom: 4rem;
+}
+
+.pump-trending-section .section-head h2 {
+    font-size: clamp(1.4rem, 2.8vw, 2rem);
+}
+
+.pump-trending-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.25rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.pump-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.pump-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 0 22px rgba(0, 255, 136, 0.12);
+}
+
+/* High-momentum highlight (momentum > 70) */
+.pump-card.high-momentum {
+    border-color: var(--green);
+    box-shadow:
+        0 0 20px rgba(0, 255, 136, 0.20),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.04);
+    position: relative;
+    overflow: hidden;
+}
+
+.pump-card.high-momentum::before {
+    content: "🔥 HOT";
+    position: absolute;
+    top: 0.5rem;
+    right: 0.6rem;
+    font-size: 0.6rem;
+    font-weight: 800;
+    color: var(--green);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    text-shadow: 0 0 6px rgba(0, 255, 136, 0.5);
+}
+
+.pump-card-header {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 0.5rem;
+}
+
+.pump-symbol {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--white);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.pump-name {
+    font-size: 0.7rem;
+    color: var(--silver);
+    opacity: 0.6;
+    text-transform: capitalize;
+    margin-top: 0.15rem;
+}
+
+.pump-card-price {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    font-size: 1.15rem;
+    font-weight: 700;
+    color: var(--green);
+}
+
+.pump-launched {
+    font-size: 0.8rem;
+    color: var(--silver);
+    opacity: 0.8;
+}
+
+/* Momentum progress bar */
+.momentum-label {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.72rem;
+    color: var(--silver);
+    opacity: 0.8;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+}
+
+.momentum-bar-wrap {
+    width: 100%;
+    height: 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.momentum-bar {
+    height: 100%;
+    border-radius: 8px;
+    transition: width 0.5s ease, background-color 0.3s ease;
+    background: linear-gradient(90deg, var(--red) 0%, var(--green) 100%);
+}
+
+.momentum-bar.low    { background: linear-gradient(90deg, #FF6B6B 0%, #FF9E9E 100%); }
+.momentum-bar.mid    { background: linear-gradient(90deg, #FFD93D 0%, #FFA500 100%); }
+.momentum-bar.high   { background: linear-gradient(90deg, #00FF88 0%, #7AFFC4 100%); }
+
+.momentum-value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--silver);
+}
+
+.momentum-bar-wrap.high .momentum-value,
+.pump-card.high-momentum .momentum-value {
+    color: var(--green);
+    text-shadow: 0 0 6px rgba(0, 255, 136, 0.4);
+}
+
+.pump-card-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 0.75rem;
+    color: var(--silver);
+    opacity: 0.7;
+}
+
+.pump-card-meta .meta-item span {
+    color: var(--white);
+    opacity: 0.9;
+}
+
+.pump-card a.pump-link {
+    color: var(--green);
+    text-decoration: none;
+    font-size: 0.75rem;
+    text-align: right;
+    opacity: 0.8;
+}
+
+.pump-card a.pump-link:hover {
+    opacity: 1;
+}
+
+.pump-loading {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--silver);
+    opacity: 0.7;
+    font-style: italic;
+    font-size: 0.95rem;
+    grid-column: 1 / -1;
+}
+
+.pump-updated {
+    text-align: right;
+    font-size: 0.75rem;
+    color: var(--silver);
+    opacity: 0.6;
+    padding: 0.5rem 1rem;
+    margin-top: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 560px) {
+    .pump-trending-grid {
+        grid-template-columns: 1fr;
+    }
+}
