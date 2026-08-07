@@ -1,3 +1,4 @@
+
 {% extends "base.html" %}
 
 {% block title %}Home{% endblock %}
@@ -22,37 +23,44 @@
     </div>
 </section>
 
+<!-- ================= Quick Stats ================= -->
+<section class="quick-stats-compact">
+    <div class="container">
+        <div class="stats-strip">
+            <div class="stat-item">
+                <span class="stat-label">Market Cap</span>
+                <span class="stat-value" id="totalMarketCap">$0.00</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-label">24h Volume</span>
+                <span class="stat-value" id="totalVolume">$0.00</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-label">BTC Dominance</span>
+                <span class="stat-value" id="btcDominance">0.0%</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-label">ETH Dominance</span>
+                <span class="stat-value" id="ethDominance">0.0%</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-label">Top Gainer</span>
+                <span class="stat-value" id="topGainer">--</span>
+            </div>
+            <div class="stat-updated">
+                <span id="statsTimestamp">Updating...</span>
+            </div>
+        </div>
+    </div>
+</section>
+
 <!-- ================= Main Content Grid ================= -->
 <div class="main-content-grid">
     <div class="main-column">
-        <!-- ================= Quick Stats ================= -->
-        <section class="quick-stats-section">
-            <div class="container">
-                <div class="section-head">
-                    <h2>📊 Quick Stats</h2>
-                    <p class="section-sub">Global crypto market metrics. Updates every 60 seconds.</p>
-                </div>
-                <div class="stats-grid" id="quickStatsGrid">
-                    <div class="stat-card">
-                        <div class="stat-label">Total Market Cap</div>
-                        <div class="stat-value" id="totalMarketCap">$0.00</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">24h Trading Volume</div>
-                        <div class="stat-value" id="totalVolume">$0.00</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">BTC Dominance</div>
-                        <div class="stat-value" id="btcDominance">0.0%</div>
-                    </div>
-                    <div class="stat-card">
-                        <div class="stat-label">ETH Dominance</div>
-                        <div class="stat-value" id="ethDominance">0.0%</div>
-                    </div>
-                </div>
-                <div class="stats-updated" id="statsUpdated"></div>
-            </div>
-        </section>
 
         <!-- ================= Top 10 Gainers ================= -->
         <section class="top-gainers-section">
