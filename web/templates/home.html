@@ -119,21 +119,15 @@
     <div class="container">
         <div class="section-head">
             <h2>📈 3h Chart with 3h & 10h Moving Averages</h2>
-            <p class="section-sub">Interactive chart showing price action and moving average crossovers for the top gainer. Click on any coin in the table above to view its chart.</p>
+            <p class="section-sub">Interactive chart showing price action, moving averages, and trading signals for the top trending Pump.fun coin. Auto-updates every 60 seconds.</p>
         </div>
         <div class="chart-container">
-            <div class="chart-controls">
-                <select id="chartCoinSelect" class="chart-select">
-                    <option value="pepe">PEPE</option>
-                    <option value="bome">BOME</option>
-                    <option value="wif">WIF</option>
-                    <option value="doge">DOGE</option>
-                    <option value="shib">SHIB</option>
-                </select>
+            <div id="chartLoading" class="chart-loading">Loading chart data for top Pump.fun coin…</div>
+            <div id="chartContainer" class="chart-area"></div>
+            <div id="chartInfo" class="chart-info">
+                <span id="currentCoin">Loading...</span>
                 <button id="chartRefreshBtn" class="btn btn-secondary">🔄 Refresh</button>
             </div>
-            <div id="chartLoading" class="chart-loading">Loading chart data…</div>
-            <div id="chartContainer" class="chart-area"></div>
         </div>
     </div>
 </section>

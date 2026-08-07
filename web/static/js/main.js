@@ -506,18 +506,18 @@
     }
 
     // ---------- 3h Chart with Moving Averages ----------
-    // Homepage interactive chart showing price action and moving averages.
-    // Loads Plotly.js from CDN and renders a line chart with price, 3h MA, and 10h MA.
-    // Updates when coin selection changes or refresh button is clicked.
+    // Homepage interactive chart showing price action, moving averages, and trading signals.
+    // Auto-loads the top trending Pump.fun coin and updates when the top coin changes.
     const chartContainer = document.getElementById('chartContainer');
     const chartLoading = document.getElementById('chartLoading');
-    const chartCoinSelect = document.getElementById('chartCoinSelect');
     const chartRefreshBtn = document.getElementById('chartRefreshBtn');
+    const currentCoinElement = document.getElementById('currentCoin');
 
     if (chartContainer) {
         // Load Plotly.js from CDN
         let plotlyLoaded = false;
         let plotlyScript = null;
+        let currentTopToken = null;
 
         function loadPlotly() {
             return new Promise((resolve, reject) => {
@@ -542,10 +542,22 @@
         function showLoading() {
             if (chartLoading) chartLoading.style.display = 'block';
             chartContainer.innerHTML = '';
+            if (currentCoinElement) currentCoinElement.textContent = 'Loading...';
         }
 
         function hideLoading() {
             if (chartLoading) chartLoading.style.display = 'none';
+        }
+
+        function updateCurrentCoinInfo(token) {
+            if (currentCoinElement) {
+                currentCoinElement.textContent = token ?
+                    `📊 ${token.symbol.toUpperCase()} - $${token.price.toLocaleString('en-US', {
+                        minimumFractionDigits: 4,
+                        maximumFractionDigits: 8
+                    })} | Momentum: ${token.momentum.toFixed(1)}` :
+                    'No data available';
+            }
         }
 
         async function loadChart(symbol) {
@@ -570,8 +582,10 @@
                 // Extract data for Plotly
                 const timestamps = data.price_data.map(item => new Date(item[0]));
                 const prices = data.price_data.map(item => item[4]); // Close price
+                const volumes = data.price_data.map(item => item[5]); // Volume
                 const ma3h = data.ma_3h.filter(item => item !== null);
                 const ma10h = data.ma_10h.filter(item => item !== null);
+                const signals = data.signals || [];
 
                 // Create traces
                 const traces = [
@@ -581,7 +595,7 @@
                         type: 'scatter',
                         mode: 'lines',
                         name: 'Price',
-                        line: { color: '#1f77b4' }
+                        line: { color: '#1f77b4', width: 2 }
                     }
                 ];
 
@@ -593,7 +607,7 @@
                         type: 'scatter',
                         mode: 'lines',
                         name: '3h MA',
-                        line: { color: '#ff7f0e', dash: 'dash' }
+                        line: { color: '#ff7f0e', dash: 'dash', width: 2 }
                     });
                 }
 
@@ -604,32 +618,92 @@
                         type: 'scatter',
                         mode: 'lines',
                         name: '10h MA',
-                        line: { color: '#2ca02c', dash: 'dot' }
+                        line: { color: '#2ca02c', dash: 'dot', width: 2 }
                     });
                 }
 
-                // Plot layout
+                // Add volume bars
+                traces.push({
+                    x: timestamps,
+                    y: volumes,
+                    type: 'bar',
+                    name: 'Volume',
+                    marker: { color: '#9467bd', opacity: 0.3 },
+                    yaxis: 'y2'
+                });
+
+                // Add entry/exit signals
+                const entrySignals = signals.filter(s => s.type === 'entry');
+                const exitSignals = signals.filter(s => s.type === 'exit');
+
+                if (entrySignals.length > 0) {
+                    traces.push({
+                        x: entrySignals.map(s => new Date(s.time)),
+                        y: entrySignals.map(s => s.price),
+                        type: 'scatter',
+                        mode: 'markers',
+                        name: 'Entry Signal',
+                        marker: {
+                            symbol: 'triangle-up',
+                            size: 12,
+                            color: '#2ecc71',
+                            line: { color: '#27ae60', width: 2 }
+                        }
+                    });
+                }
+
+                if (exitSignals.length > 0) {
+                    traces.push({
+                        x: exitSignals.map(s => new Date(s.time)),
+                        y: exitSignals.map(s => s.price),
+                        type: 'scatter',
+                        mode: 'markers',
+                        name: 'Exit Signal',
+                        marker: {
+                            symbol: 'triangle-down',
+                            size: 12,
+                            color: '#e74c3c',
+                            line: { color: '#c0392b', width: 2 }
+                        }
+                    });
+                }
+
+                // Plot layout with dual y-axis
                 const layout = {
-                    title: `${symbol.toUpperCase()} Price Chart with Moving Averages`,
+                    title: `${symbol.toUpperCase()} Price Chart with Moving Averages & Signals`,
                     xaxis: {
                         title: 'Time',
                         rangeslider: { visible: false },
-                        type: 'date'
+                        type: 'date',
+                        gridcolor: 'rgba(0, 0, 0, 0.1)'
                     },
                     yaxis: {
                         title: 'Price (USD)',
-                        fixedrange: false
+                        fixedrange: false,
+                        gridcolor: 'rgba(0, 0, 0, 0.1)',
+                        zerolinecolor: 'rgba(0, 0, 0, 0.1)'
+                    },
+                    yaxis2: {
+                        title: 'Volume',
+                        overlaying: 'y',
+                        side: 'right',
+                        fixedrange: false,
+                        showgrid: false
                     },
                     showlegend: true,
                     legend: {
                         x: 0,
                         y: 1.1,
-                        orientation: 'h'
+                        orientation: 'h',
+                        bgcolor: 'rgba(255, 255, 255, 0.9)',
+                        bordercolor: 'rgba(0, 0, 0, 0.1)',
+                        borderwidth: 1
                     },
-                    margin: { t: 50, r: 20, b: 50, l: 50 },
+                    margin: { t: 50, r: 60, b: 50, l: 60 },
                     hovermode: 'closest',
                     plot_bgcolor: '#f8f9fa',
-                    paper_bgcolor: '#ffffff'
+                    paper_bgcolor: '#ffffff',
+                    font: { family: "'Inter', sans-serif" }
                 };
 
                 // Render chart
@@ -646,30 +720,72 @@
                 hideLoading();
                 chartContainer.innerHTML = `
                     <div class="chart-error">
-                        <p>⚠️ Failed to load chart: ${error.message}</p>
-                        <p>Please try refreshing the page or selecting a different coin.</p>
+                        <h3>⚠️ Chart Loading Error</h3>
+                        <p>${error.message}</p>
+                        <p>We'll automatically retry on the next refresh.</p>
+                        <button id="chartRetryBtn" class="btn btn-secondary" style="margin-top: 1rem;">🔄 Try Again</button>
+                    </div>
+                `;
+
+                // Add retry button event listener
+                const retryBtn = document.getElementById('chartRetryBtn');
+                if (retryBtn) {
+                    retryBtn.addEventListener('click', () => {
+                        loadChartForTopToken();
+                    });
+                }
+            }
+        }
+
+        async function loadChartForTopToken() {
+            try {
+                // Fetch pump trending data to get the top token
+                const response = await fetch('/api/pump-trending');
+                if (!response.ok) {
+                    throw new Error(`Pump trending API returned ${response.status}`);
+                }
+
+                const data = await response.json();
+                const tokens = data.tokens || [];
+
+                if (tokens.length === 0) {
+                    throw new Error('No trending tokens available');
+                }
+
+                // Get the top token by momentum
+                const topToken = tokens.reduce((prev, current) =>
+                    (prev.momentum > current.momentum) ? prev : current
+                );
+
+                currentTopToken = topToken;
+                updateCurrentCoinInfo(topToken);
+
+                // Load chart for the top token's symbol (lowercase)
+                await loadChart(topToken.symbol.toLowerCase());
+
+            } catch (error) {
+                console.error('Failed to load top token data:', error);
+                showLoading();
+                chartContainer.innerHTML = `
+                    <div class="chart-error">
+                        <h3>⚠️ Failed to Load Top Token</h3>
+                        <p>${error.message}</p>
+                        <p>We'll automatically retry on the next refresh.</p>
                     </div>
                 `;
             }
         }
 
         // Event listeners
-        if (chartCoinSelect) {
-            chartCoinSelect.addEventListener('change', function() {
-                loadChart(this.value);
-            });
-        }
-
         if (chartRefreshBtn) {
-            chartRefreshBtn.addEventListener('click', function() {
-                const currentSymbol = chartCoinSelect ? chartCoinSelect.value : 'pepe';
-                loadChart(currentSymbol);
-            });
+            chartRefreshBtn.addEventListener('click', loadChartForTopToken);
         }
 
-        // Load initial chart
-        const initialSymbol = chartCoinSelect ? chartCoinSelect.value : 'pepe';
-        loadChart(initialSymbol);
+        // Load initial chart with top token
+        loadChartForTopToken();
+
+        // Auto-refresh every 60 seconds
+        setInterval(loadChartForTopToken, 60000);
     }
 
     // ---------- Pump.fun Trending ----------

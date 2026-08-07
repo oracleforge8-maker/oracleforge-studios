@@ -26,6 +26,7 @@ Run:
 from __future__ import annotations
 
 import re
+import time
 from datetime import datetime, timezone
 from typing import Any, Dict, List
 
@@ -111,6 +112,379 @@ def waitlist():
 # ---------------------------------------------------------------------------
 # API routes
 # ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Chart data (CoinGecko /coins/{id}/ohlc)
+# ---------------------------------------------------------------------------
+# Public schema (returned by /api/chart/<coin>):
+#     {
+#         "coin": "PEPE",
+#         "price_data": [[timestamp, open, high, low, close, volume]],
+#         "ma_3h": [],
+#         "ma_10h": [],
+#         "signals": [
+#             {"time": timestamp, "type": "entry" | "exit", "price": 0}
+#         ]
+#     }
+#
+# Live data is pulled from CoinGecko. When COINGECKO_API_KEY is unset (or the
+# API is unreachable) we fall back to branded mock data so the chart always
+# renders — the same graceful-degradation pattern used by the ticker.
+# Refreshed by the frontend as needed.
+
+def _coingecko_chart_data(coin_id: str, timeframe: str = "3h") -> Dict[str, Any]:
+    """Fetch OHLC data from CoinGecko and calculate moving averages.
+
+    Args:
+        coin_id: CoinGecko coin ID (e.g., "pepe", "bitcoin").
+        timeframe: Timeframe for the chart (default "3h").
+
+    Returns:
+        Dict with price_data, ma_3h, ma_10h, and signals.
+    """
+    # Map timeframe to CoinGecko days parameter
+    days_map = {
+        "3h": 1,  # 1 day for 3h chart
+        "1h": 1,  # 1 day for 1h chart
+        "4h": 2,  # 2 days for 4h chart
+        "1d": 7,  # 7 days for daily chart
+    }
+    days = days_map.get(timeframe, 1)
+
+    try:
+        # Fetch OHLC data from CoinGecko
+        resp = requests.get(
+            f"{COINGECKO_BASE}/coins/{coin_id}/ohlc",
+            params={
+                "vs_currency": "usd",
+                "days": days
+            },
+            headers=_coingecko_headers(),
+            timeout=_COINGECKO_TIMEOUT,
+        )
+        resp.raise_for_status()
+        ohlc_data = resp.json()
+
+        # Process data and calculate moving averages
+        price_data = []
+        closes = []
+
+        for candle in ohlc_data:
+            timestamp = candle[0]
+            open_price = candle[1]
+            high = candle[2]
+            low = candle[3]
+            close = candle[4]
+            volume = candle[5] if len(candle) > 5 else 0
+
+            price_data.append([timestamp, open_price, high, low, close, volume])
+            closes.append(close)
+
+        # Calculate moving averages
+        ma_3h = []
+        ma_10h = []
+
+        for i in range(len(closes)):
+            if i >= 3:
+                ma_3h.append(sum(closes[i-3:i+1]) / 4)  # 3-period MA
+            else:
+                ma_3h.append(None)
+
+            if i >= 10:
+                ma_10h.append(sum(closes[i-10:i+1]) / 11)  # 10-period MA
+            else:
+                ma_10h.append(None)
+
+        # Generate simple signals (for demo purposes)
+        signals = []
+        for i in range(1, len(closes)):
+            if i >= 10 and ma_3h[i] and ma_10h[i]:
+                if ma_3h[i] > ma_10h[i] and ma_3h[i-1] <= ma_10h[i-1]:
+                    signals.append({
+                        "time": price_data[i][0],
+                        "type": "entry",
+                        "price": closes[i]
+                    })
+                elif ma_3h[i] < ma_10h[i] and ma_3h[i-1] >= ma_10h[i-1]:
+                    signals.append({
+                        "time": price_data[i][0],
+                        "type": "exit",
+                        "price": closes[i]
+                    })
+
+        return {
+            "coin": coin_id.upper(),
+            "price_data": price_data,
+            "ma_3h": ma_3h,
+            "ma_10h": ma_10h,
+            "signals": signals
+        }
+
+    except Exception as exc:
+        log.warning("Chart data fetch failed for %s: %s", coin_id, exc)
+        return {
+            "coin": coin_id.upper(),
+            "price_data": [],
+            "ma_3h": [],
+            "ma_10h": [],
+            "signals": []
+        }
+
+def _mock_chart_data(coin_id: str) -> Dict[str, Any]:
+    """Branded fallback chart data (used without a key or on API failure).
+
+    Returns sample data so the chart always renders something meaningful.
+    """
+    # Generate mock OHLC data for the last 24 hours (3h intervals = 8 candles)
+    now = int(time.time() * 1000)
+    price_data = []
+    base_price = 0.0000142  # PEPE-like price
+
+    for i in range(8):
+        timestamp = now - (8 - i) * 3 * 60 * 60 * 1000  # 3h intervals
+        price = base_price * (1 + (i * 0.05 - 0.15))  # Some variation
+        price_data.append([
+            timestamp,
+            price * 0.98,  # open
+            price * 1.02,  # high
+            price * 0.95,  # low
+            price,         # close
+            1000000        # volume
+        ])
+
+    # Calculate mock moving averages
+    closes = [candle[4] for candle in price_data]
+    ma_3h = [sum(closes[max(0, i-3):i+1]) / min(4, i+1) for i in range(len(closes))]
+    ma_10h = [sum(closes[max(0, i-10):i+1]) / min(11, i+1) for i in range(len(closes))]
+
+    # Generate mock signals
+    signals = []
+    if len(price_data) > 2:
+        signals.append({
+            "time": price_data[2][0],
+            "type": "entry",
+            "price": price_data[2][4]
+        })
+        signals.append({
+            "time": price_data[5][0],
+            "type": "exit",
+            "price": price_data[5][4]
+        })
+
+    return {
+        "coin": coin_id.upper(),
+        "price_data": price_data,
+        "ma_3h": ma_3h,
+        "ma_10h": ma_10h,
+        "signals": signals
+    }
+
+@app.route("/api/chart/<coin>")
+def api_chart(coin):
+    """Chart data endpoint for a specific coin.
+
+    Query params:
+        timeframe: Timeframe for the chart (default "3h").
+
+    Returns:
+        JSON: {"coin", "price_data", "ma_3h", "ma_10h", "signals"}
+    """
+    timeframe = request.args.get("timeframe", "3h")
+
+    if not config.env("COINGECKO_API_KEY"):
+        log.info("Chart: no COINGECKO_API_KEY configured — serving mock data")
+        return jsonify(_mock_chart_data(coin))
+
+    try:
+        return jsonify(_coingecko_chart_data(coin, timeframe))
+    except Exception as exc:  # noqa: BLE001 — never break the homepage
+        log.warning("Chart: CoinGecko fetch failed (%s) — serving mock data", exc)
+        return jsonify(_mock_chart_data(coin))
+
+# ---------------------------------------------------------------------------
+# Quick Stats (CoinGecko /global)
+# ---------------------------------------------------------------------------
+# Public schema (returned by /api/quick-stats):
+#     {
+#         "total_market_cap": 2500000000000,
+#         "total_volume": 85000000000,
+#         "btc_dominance": 52.5,
+#         "eth_dominance": 18.2
+#     }
+#
+# Live data is pulled from CoinGecko /global endpoint. When COINGECKO_API_KEY
+# is unset (or the API is unreachable) we fall back to branded mock data so the
+# stats always render — the same graceful-degradation pattern used by the ticker.
+# Refreshed by the frontend every 60 seconds.
+
+def _coingecko_global_data() -> Dict[str, Any]:
+    """Fetch global market data from CoinGecko /global endpoint.
+    Returns:
+        Dict with total_market_cap, total_volume, btc_dominance, eth_dominance.
+    """
+    resp = requests.get(
+        f"{COINGECKO_BASE}/global",
+        headers=_coingecko_headers(),
+        timeout=_COINGECKO_TIMEOUT,
+    )
+    resp.raise_for_status()
+    data = resp.json().get("data", {}) or {}
+
+    out: Dict[str, Any] = {}
+    market_cap_usd = data.get("total_market_cap", {}).get("usd")
+    if market_cap_usd is not None:
+        out["total_market_cap"] = float(market_cap_usd)
+
+    total_volume_usd = data.get("total_volume", {}).get("usd")
+    if total_volume_usd is not None:
+        out["total_volume"] = float(total_volume_usd)
+
+    btc_dominance = data.get("market_cap_percentage", {}).get("btc")
+    if btc_dominance is not None:
+        out["btc_dominance"] = float(btc_dominance)
+
+    eth_dominance = data.get("market_cap_percentage", {}).get("eth")
+    if eth_dominance is not None:
+        out["eth_dominance"] = float(eth_dominance)
+
+    return out
+
+def _mock_quick_stats_data() -> Dict[str, Any]:
+    """Branded fallback quick stats payload (used without a key or on API failure).
+    Returns sample data so the stats always render something meaningful.
+    Returns:
+        Dict matching the public /api/quick-stats schema.
+    """
+    return {
+        "total_market_cap": 2500000000000,
+        "total_volume": 85000000000,
+        "btc_dominance": 52.5,
+        "eth_dominance": 18.2
+    }
+
+@app.route("/api/quick-stats")
+def api_quick_stats():
+    """Global crypto market quick stats (market cap, volume, dominance).
+    Uses live CoinGecko data when ``COINGECKO_API_KEY`` is configured;
+    otherwise (and on any API failure) returns branded mock data so the
+    stats always display. Refreshed by the frontend every 60 seconds.
+    Returns:
+        JSON: {"total_market_cap", "total_volume", "btc_dominance", "eth_dominance"}
+    """
+    if not config.env("COINGECKO_API_KEY"):
+        log.info("Quick stats: no COINGECKO_API_KEY configured — serving mock data")
+        return jsonify(_mock_quick_stats_data())
+
+    try:
+        return jsonify(_coingecko_global_data())
+    except Exception as exc:  # noqa: BLE001 — never break the homepage
+        log.warning("Quick stats: CoinGecko fetch failed (%s) — serving mock data", exc)
+        return jsonify(_mock_quick_stats_data())
+
+# ---------------------------------------------------------------------------
+# Breaking News ticker (CryptoPanic)
+# ---------------------------------------------------------------------------
+
+# ---------------------------------------------------------------------------
+# Breaking News ticker (CryptoPanic)
+# ---------------------------------------------------------------------------
+# Public schema (returned by /api/news):
+#     {
+#         "news": [
+#             {"title": "Bitcoin Surges Past $65K...", "url": "https://...", "source": "CoinDesk"},
+#             {"title": "Ethereum ETFs Approved...", "url": "https://...", "source": "CoinTelegraph"},
+#             ...
+#         ]
+#     }
+#
+# Live data is pulled from CryptoPanic API when CRYPTOPANIC_API_KEY is configured.
+# When no key is set (or the API is unreachable) we fall back to branded mock
+# data so the ticker always renders — the same graceful-degradation pattern
+# used by other tickers. Refreshed by the frontend every 5 minutes.
+
+#: CryptoPanic API v1 base URL
+CRYPTOPANIC_BASE = "https://cryptopanic.com/api/v1"
+
+#: Per-request hard timeout (seconds) so a slow CryptoPanic can never stall the page
+_CRYPTOPANIC_TIMEOUT = 10
+
+def _cryptopanic_headers() -> Dict[str, str]:
+    """Build request headers for a CryptoPanic call.
+    Returns:
+        Headers dict, including the API key header when configured.
+    """
+    headers: Dict[str, str] = {"accept": "application/json"}
+    key = config.env("CRYPTOPANIC_API_KEY")
+    if key:
+        headers["Authorization"] = f"Bearer {key}"
+    return headers
+
+def _cryptopanic_latest_news() -> List[Dict[str, Any]]:
+    """Fetch latest crypto news from CryptoPanic /posts/ endpoint.
+    Returns:
+        List of dicts: {"title", "url", "source"}.
+    """
+    resp = requests.get(
+        f"{CRYPTOPANIC_BASE}/posts/",
+        params={
+            "public": "true",
+            "filter": "hot",
+            "regions": "en",
+            "kind": "news",
+            "limit": 10
+        },
+        headers=_cryptopanic_headers(),
+        timeout=_CRYPTOPANIC_TIMEOUT,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+    results: List[Dict[str, Any]] = data.get("results", [])
+
+    out: List[Dict[str, Any]] = []
+    for post in results:
+        out.append({
+            "title": post.get("title", "Breaking Crypto News"),
+            "url": post.get("url", ""),
+            "source": post.get("domain", "Source")
+        })
+    return out
+
+def _mock_news_data() -> List[Dict[str, Any]]:
+    """Branded fallback news data (used without a key or on API failure).
+    Returns sample headlines so the ticker always renders something meaningful.
+    Returns:
+        List of dicts: {"title", "url", "source"}.
+    """
+    return [
+        {"title": "Bitcoin Surges Past $65K as Institutional Adoption Accelerates", "url": "https://example.com/bitcoin-surge", "source": "CoinDesk"},
+        {"title": "Ethereum ETFs Approved by SEC, ETH Price Jumps 12%", "url": "https://example.com/eth-etf", "source": "CoinTelegraph"},
+        {"title": "Solana Network Outage Resolved After 5-Hour Downtime", "url": "https://example.com/solana-outage", "source": "The Block"},
+        {"title": "MicroStrategy Adds 12,000 More BTC to Treasury, Now Holds 226,331 Bitcoin", "url": "https://example.com/microstrategy-btc", "source": "Decrypt"},
+        {"title": "SEC Delays Decision on Spot Bitcoin ETFs Until October", "url": "https://example.com/sec-delay", "source": "Bloomberg"},
+        {"title": "Vitalik Buterin Proposes New EIP to Reduce Ethereum Gas Fees by 30%", "url": "https://example.com/vitalik-eip", "source": "CryptoBriefing"},
+        {"title": "Binance Launches New DeFi Staking Platform with 20% APY", "url": "https://example.com/binance-defi", "source": "CoinDesk"},
+        {"title": "Cardano Vasil Hard Fork Successfully Completed, ADA Price Rallies", "url": "https://example.com/cardano-vasil", "source": "CoinTelegraph"}
+    ]
+
+@app.route("/api/news")
+def api_news():
+    """Latest crypto news headlines for the breaking news ticker.
+    Uses live CryptoPanic data when CRYPTOPANIC_API_KEY is configured;
+    otherwise (and on any API failure) returns branded mock data so the
+    ticker always displays. Refreshed by the frontend every 5 minutes.
+    Returns:
+        JSON: {"news": [{"title", "url", "source"}, ...]}
+    """
+    if not config.env("CRYPTOPANIC_API_KEY"):
+        log.info("News: no CRYPTOPANIC_API_KEY configured — serving mock data")
+        return jsonify({"news": _mock_news_data()})
+
+    try:
+        news_items = _cryptopanic_latest_news()
+        return jsonify({"news": news_items})
+    except Exception as exc:  # noqa: BLE001 — never break the homepage
+        log.warning("News: CryptoPanic fetch failed (%s) — serving mock data", exc)
+        return jsonify({"news": _mock_news_data()})
 
 @app.route("/api/trends")
 def api_trends():
