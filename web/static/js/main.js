@@ -583,8 +583,8 @@
                 const timestamps = data.price_data.map(item => new Date(item[0]));
                 const prices = data.price_data.map(item => item[4]); // Close price
                 const volumes = data.price_data.map(item => item[5]); // Volume
-                const ma3h = data.ma_3h.filter(item => item !== null);
-                const ma10h = data.ma_10h.filter(item => item !== null);
+                         const ma1m = data.ma_1m.filter(item => item !== null);
+                         const ma5m = data.ma_5m.filter(item => item !== null);
                 const signals = data.signals || [];
 
                 // Create traces
@@ -600,24 +600,24 @@
                 ];
 
                 // Add MA traces if data exists
-                if (ma3h.length > 0) {
+                if (ma1m.length > 0) {
                     traces.push({
-                        x: timestamps.slice(3), // MA starts after 3 periods
-                        y: ma3h,
+                        x: timestamps.slice(1), // MA starts after 1 period
+                        y: ma1m,
                         type: 'scatter',
                         mode: 'lines',
-                        name: '3h MA',
+                        name: '1-min MA',
                         line: { color: '#ff7f0e', dash: 'dash', width: 2 }
                     });
                 }
 
-                if (ma10h.length > 0) {
+                if (ma5m.length > 0) {
                     traces.push({
-                        x: timestamps.slice(10), // MA starts after 10 periods
-                        y: ma10h,
+                        x: timestamps.slice(5), // MA starts after 5 periods
+                        y: ma5m,
                         type: 'scatter',
                         mode: 'lines',
-                        name: '10h MA',
+                        name: '5-min MA',
                         line: { color: '#2ca02c', dash: 'dot', width: 2 }
                     });
                 }
@@ -1105,8 +1105,8 @@
                 // Extract data for Plotly
                 const timestamps = data.price_data.map(item => new Date(item[0]));
                 const prices = data.price_data.map(item => item[4]); // Close price
-                const ma3h = data.ma_3h.filter(item => item !== null);
-                const ma10h = data.ma_10h.filter(item => item !== null);
+                const ma1m = data.ma_1m.filter(item => item !== null);
+                const ma5m = data.ma_5m.filter(item => item !== null);
 
                 // Create traces
                 const traces = [
@@ -1121,24 +1121,24 @@
                 ];
 
                 // Add MA traces if data exists
-                if (ma3h.length > 0) {
+                if (ma1m.length > 0) {
                     traces.push({
-                        x: timestamps.slice(3), // MA starts after 3 periods
-                        y: ma3h,
+                        x: timestamps.slice(1), // MA starts after 1 period
+                        y: ma1m,
                         type: 'scatter',
                         mode: 'lines',
-                        name: '3h MA',
+                        name: '1-min MA',
                         line: { color: '#ff7f0e', dash: 'dash' }
                     });
                 }
 
-                if (ma10h.length > 0) {
+                if (ma5m.length > 0) {
                     traces.push({
-                        x: timestamps.slice(10), // MA starts after 10 periods
-                        y: ma10h,
+                        x: timestamps.slice(5), // MA starts after 5 periods
+                        y: ma5m,
                         type: 'scatter',
                         mode: 'lines',
-                        name: '10h MA',
+                        name: '5-min MA',
                         line: { color: '#2ca02c', dash: 'dot' }
                     });
                 }

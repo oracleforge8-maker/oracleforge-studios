@@ -132,24 +132,26 @@ def waitlist():
 # renders — the same graceful-degradation pattern used by the ticker.
 # Refreshed by the frontend as needed.
 
-def _coingecko_chart_data(coin_id: str, timeframe: str = "3h") -> Dict[str, Any]:
+def _coingecko_chart_data(coin_id: str, timeframe: str = "1m") -> Dict[str, Any]:
     """Fetch OHLC data from CoinGecko and calculate moving averages.
 
     Args:
         coin_id: CoinGecko coin ID (e.g., "pepe", "bitcoin").
-        timeframe: Timeframe for the chart (default "3h").
+        timeframe: Timeframe for the chart (default "1m").
 
     Returns:
-        Dict with price_data, ma_3h, ma_10h, and signals.
+        Dict with price_data, ma_1m, ma_5m, and signals.
     """
     # Map timeframe to CoinGecko days parameter
     days_map = {
-        "3h": 1,  # 1 day for 3h chart
-        "1h": 1,  # 1 day for 1h chart
-        "4h": 2,  # 2 days for 4h chart
-        "1d": 7,  # 7 days for daily chart
+        "1m": 0.05,  # 1 hour for 1m chart (720 minutes / 1440 minutes per day)
+        "5m": 0.25,  # 6 hours for 5m chart
+        "15m": 0.5,  # 12 hours for 15m chart
+        "1h": 1,     # 1 day for 1h chart
+        "4h": 2,     # 2 days for 4h chart
+        "1d": 7,     # 7 days for daily chart
     }
-    days = days_map.get(timeframe, 1)
+    days = days_map.get(timeframe, 0.05)
 
     try:
         # Fetch OHLC data from CoinGecko
@@ -180,32 +182,36 @@ def _coingecko_chart_data(coin_id: str, timeframe: str = "3h") -> Dict[str, Any]
             price_data.append([timestamp, open_price, high, low, close, volume])
             closes.append(close)
 
-        # Calculate moving averages
-        ma_3h = []
-        ma_10h = []
+        # Calculate moving averages based on timeframe
+        ma_1m = []
+        ma_5m = []
+
+        # Determine MA periods based on timeframe
+        ma_1_period = 1  # 1-minute MA
+        ma_5_period = 5  # 5-minute MA
 
         for i in range(len(closes)):
-            if i >= 3:
-                ma_3h.append(sum(closes[i-3:i+1]) / 4)  # 3-period MA
+            if i >= ma_1_period:
+                ma_1m.append(sum(closes[i-ma_1_period:i+1]) / (ma_1_period + 1))  # 1-period MA
             else:
-                ma_3h.append(None)
+                ma_1m.append(None)
 
-            if i >= 10:
-                ma_10h.append(sum(closes[i-10:i+1]) / 11)  # 10-period MA
+            if i >= ma_5_period:
+                ma_5m.append(sum(closes[i-ma_5_period:i+1]) / (ma_5_period + 1))  # 5-period MA
             else:
-                ma_10h.append(None)
+                ma_5m.append(None)
 
         # Generate simple signals (for demo purposes)
         signals = []
         for i in range(1, len(closes)):
-            if i >= 10 and ma_3h[i] and ma_10h[i]:
-                if ma_3h[i] > ma_10h[i] and ma_3h[i-1] <= ma_10h[i-1]:
+            if i >= ma_5_period and ma_1m[i] and ma_5m[i]:
+                if ma_1m[i] > ma_5m[i] and (i == 1 or ma_1m[i-1] <= ma_5m[i-1]):
                     signals.append({
                         "time": price_data[i][0],
                         "type": "entry",
                         "price": closes[i]
                     })
-                elif ma_3h[i] < ma_10h[i] and ma_3h[i-1] >= ma_10h[i-1]:
+                elif ma_1m[i] < ma_5m[i] and (i == 1 or ma_1m[i-1] >= ma_5m[i-1]):
                     signals.append({
                         "time": price_data[i][0],
                         "type": "exit",
@@ -215,8 +221,8 @@ def _coingecko_chart_data(coin_id: str, timeframe: str = "3h") -> Dict[str, Any]
         return {
             "coin": coin_id.upper(),
             "price_data": price_data,
-            "ma_3h": ma_3h,
-            "ma_10h": ma_10h,
+            "ma_1m": ma_1m,
+            "ma_5m": ma_5m,
             "signals": signals
         }
 
@@ -225,8 +231,8 @@ def _coingecko_chart_data(coin_id: str, timeframe: str = "3h") -> Dict[str, Any]
         return {
             "coin": coin_id.upper(),
             "price_data": [],
-            "ma_3h": [],
-            "ma_10h": [],
+            "ma_1m": [],
+            "ma_5m": [],
             "signals": []
         }
 
@@ -254,8 +260,8 @@ def _mock_chart_data(coin_id: str) -> Dict[str, Any]:
 
     # Calculate mock moving averages
     closes = [candle[4] for candle in price_data]
-    ma_3h = [sum(closes[max(0, i-3):i+1]) / min(4, i+1) for i in range(len(closes))]
-    ma_10h = [sum(closes[max(0, i-10):i+1]) / min(11, i+1) for i in range(len(closes))]
+    ma_1m = [sum(closes[max(0, i-1):i+1]) / min(2, i+1) for i in range(len(closes))]
+    ma_5m = [sum(closes[max(0, i-5):i+1]) / min(6, i+1) for i in range(len(closes))]
 
     # Generate mock signals
     signals = []
@@ -274,8 +280,8 @@ def _mock_chart_data(coin_id: str) -> Dict[str, Any]:
     return {
         "coin": coin_id.upper(),
         "price_data": price_data,
-        "ma_3h": ma_3h,
-        "ma_10h": ma_10h,
+        "ma_1m": ma_1m,
+        "ma_5m": ma_5m,
         "signals": signals
     }
 
@@ -284,12 +290,12 @@ def api_chart(coin):
     """Chart data endpoint for a specific coin.
 
     Query params:
-        timeframe: Timeframe for the chart (default "3h").
+        timeframe: Timeframe for the chart (default "1m"). Supported: "1m", "5m", "15m", "1h", "4h", "1d".
 
     Returns:
-        JSON: {"coin", "price_data", "ma_3h", "ma_10h", "signals"}
+        JSON: {"coin", "price_data", "ma_1m", "ma_5m", "signals"}
     """
-    timeframe = request.args.get("timeframe", "3h")
+    timeframe = request.args.get("timeframe", "1m")
 
     if not config.env("COINGECKO_API_KEY"):
         log.info("Chart: no COINGECKO_API_KEY configured — serving mock data")
