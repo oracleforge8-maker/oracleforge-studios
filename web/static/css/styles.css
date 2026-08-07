@@ -704,10 +704,79 @@ section { margin-bottom: 4rem; }
 }
 
 /* ============================================================
-   Breaking News Ticker
+   Breaking News Static List
    ============================================================ */
 
-.news-ticker {
+.breaking-news-section {
+    margin-bottom: 2rem;
+}
+
+.news-list {
+    display: grid;
+    gap: 1rem;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.news-article {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.news-article:hover {
+    transform: translateX(4px);
+    box-shadow: var(--glow-purple);
+}
+
+.news-title {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 0.4rem;
+    line-height: 1.4;
+}
+
+.news-source {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.news-readmore {
+    display: inline-block;
+    font-size: 0.85rem;
+    color: var(--silver);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.news-readmore:hover {
+    color: var(--green);
+    text-decoration: underline;
+}
+
+.news-loading {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--silver);
+    font-size: 0.9rem;
+}
+
+/* ============================================================
+   Market Ticker (Fixed Layout)
+   ============================================================ */
+
+.market-ticker {
     display: flex;
     align-items: center;
     gap: 0.75rem;
@@ -716,43 +785,47 @@ section { margin-bottom: 4rem; }
     border-radius: 12px;
     padding: 0.4rem 0.8rem;
     margin-bottom: 2rem;
-    box-shadow: 0 0 18px rgba(255, 68, 68, 0.08);
+    box-shadow: 0 0 18px rgba(0, 255, 136, 0.06);
     overflow: hidden;
+    position: relative;
 }
 
-.news-ticker .ticker-label {
+.ticker-label {
     flex: 0 0 auto;
     font-size: 0.7rem;
     font-weight: 800;
     text-transform: uppercase;
     letter-spacing: 0.6px;
-    color: var(--red);
-    background: rgba(255, 68, 68, 0.15);
+    color: var(--green);
+    white-space: nowrap;
+    z-index: 2;
+    position: relative;
+    background: var(--card-bg);
     padding: 0.2rem 0.6rem;
     border-radius: 6px;
-    white-space: nowrap;
 }
 
-.news-track {
+.ticker-track {
     flex: 1 1 auto;
     display: flex;
     align-items: center;
     gap: 1.4rem;
     overflow: hidden;
-    animation: newsScroll 30s linear infinite;
+    animation: tickerScroll 26s linear infinite;
+    padding-left: 1rem;
 }
 
 /* Hover anywhere on the ticker pauses the scroll */
-.news-ticker:hover .news-track {
+.market-ticker:hover .ticker-track {
     animation-play-state: paused;
 }
 
-@keyframes newsScroll {
+@keyframes tickerScroll {
     0%   { transform: translateX(0); }
     100% { transform: translateX(-50%); }
 }
 
-.news-item {
+.ticker-item {
     display: inline-flex;
     align-items: center;
     gap: 0.4rem;
@@ -760,39 +833,34 @@ section { margin-bottom: 4rem; }
     white-space: nowrap;
     color: var(--silver);
     flex: 0 0 auto;
-    cursor: pointer;
-    transition: color 0.2s;
+    min-width: fit-content;
 }
 
-.news-item:hover {
-    color: var(--white);
-}
+.ticker-item .ticker-symbol { font-weight: 700; color: var(--white); }
+.ticker-item .ticker-price   { opacity: 0.8; }
+.ticker-item .ticker-medal   { font-size: 1.05rem; }
 
-.news-item::after {
+.ticker-item::after {
     content: "•";
     color: var(--border);
     opacity: 0.35;
     margin-left: 0.1rem;
 }
 
-.news-item:last-child::after {
-    content: "";
-}
-
-.news-source {
+.ticker-change {
     font-weight: 700;
-    color: var(--red);
+    padding: 0.1rem 0.5rem;
+    border-radius: 6px;
     font-size: 0.78rem;
+    white-space: nowrap;
 }
-
-.news-title {
-    font-weight: 600;
-    color: var(--white);
-}
+.ticker-change.up   { color: var(--green); background: rgba(0, 255, 136, 0.12); }
+.ticker-change.down { color: var(--red);   background: rgba(255, 68, 68, 0.12); }
 
 @media (max-width: 560px) {
-    .news-item { font-size: 0.72rem; }
-    .news-track { animation-duration: 20s; }
+    .ticker-item { font-size: 0.72rem; }
+    .ticker-medal { font-size: 0.9rem; }
+    .ticker-track { animation-duration: 20s; }
 }
 
 /* ============================================================

@@ -4,10 +4,17 @@
 
 {% block content %}
 
-<!-- ================= Breaking News Ticker ================= -->
-<section class="news-ticker" id="newsTicker">
-    <span class="ticker-label">BREAKING</span>
-    <div class="news-track" id="newsTrack"></div>
+<!-- ================= Breaking News ================= -->
+<section class="breaking-news-section">
+    <div class="container">
+        <div class="section-head">
+            <h2>📰 Breaking News</h2>
+            <p class="section-sub">Latest crypto headlines. Updates every 5 minutes.</p>
+        </div>
+        <div class="news-list" id="newsList">
+            <div class="news-loading">Loading latest news...</div>
+        </div>
+    </div>
 </section>
 
 <!-- ================= Market Ticker ================= -->

@@ -137,20 +137,18 @@
         setInterval(loadQuickStats, POLL_MS);
     }
 
-    // ---------- Breaking News ticker ----------
-    // Homepage auto-scrolling news ticker (latest crypto headlines).
-    // Polls /api/news every 5 minutes. Hovering pauses the scroll (via CSS).
-    // The track is duplicated so the marquee loops seamlessly.
-    const newsTrack = document.getElementById('newsTrack');
+    // ---------- Breaking News static list ----------
+    // Homepage static list of latest crypto headlines (5 most recent).
+    // Polls /api/news every 5 minutes.
+    const newsList = document.getElementById('newsList');
 
-    if (newsTrack) {
+    if (newsList) {
         const NEWS_POLL_MS = 300000; // 5 minutes
-        const MAX_NEWS_ITEMS = 8;
+        const MAX_NEWS_ITEMS = 5;
 
         function buildNewsItem(title, url, source) {
             const item = document.createElement('div');
-            item.className = 'news-item';
-            item.dataset.url = url;
+            item.className = 'news-article';
 
             const titleSpan = document.createElement('span');
             titleSpan.className = 'news-title';
@@ -160,12 +158,20 @@
             sourceSpan.className = 'news-source';
             sourceSpan.textContent = source;
 
+            const readMoreLink = document.createElement('a');
+            readMoreLink.className = 'news-readmore';
+            readMoreLink.href = url || '#';
+            readMoreLink.target = '_blank';
+            readMoreLink.rel = 'noopener noreferrer';
+            readMoreLink.textContent = 'Read more →';
+
             item.appendChild(titleSpan);
             item.appendChild(sourceSpan);
+            item.appendChild(readMoreLink);
 
             // Add click handler to open article in new tab
-            item.addEventListener('click', function() {
-                if (url) {
+            item.addEventListener('click', function(e) {
+                if (url && !e.target.classList.contains('news-readmore')) {
                     window.open(url, '_blank', 'noopener,noreferrer');
                 }
             });
@@ -173,8 +179,8 @@
             return item;
         }
 
-        function initNewsTicker(newsItems) {
-            newsTrack.innerHTML = '';
+        function renderNewsList(newsItems) {
+            newsList.innerHTML = '';
             const frag = document.createDocumentFragment();
 
             // Add news items (limit to MAX_NEWS_ITEMS)
@@ -187,18 +193,11 @@
                 ));
             });
 
-            newsTrack.appendChild(frag);
-            // Duplicate the set so the marquee (translateX 0 -> -50%) loops seamlessly.
-            newsTrack.innerHTML += newsTrack.innerHTML;
+            newsList.appendChild(frag);
         }
 
         function showLoadingNews() {
-            newsTrack.innerHTML = '';
-            const loadingItems = [
-                {title: 'Loading crypto headlines...', url: '', source: ''},
-                {title: 'Fetching latest news...', url: '', source: ''}
-            ];
-            initNewsTicker(loadingItems);
+            newsList.innerHTML = '<div class="news-loading">Loading latest news...</div>';
         }
 
         async function loadNews() {
@@ -208,7 +207,7 @@
                 const data = await res.json();
 
                 if (data.news && Array.isArray(data.news) && data.news.length > 0) {
-                    initNewsTicker(data.news);
+                    renderNewsList(data.news);
                 } else {
                     // Fallback to mock data if API returns empty
                     const mockNews = [
@@ -216,21 +215,21 @@
                         {title: 'Ethereum ETFs Approved by SEC, ETH Price Jumps 12%', url: 'https://example.com/eth-etf', source: 'CoinTelegraph'},
                         {title: 'Solana Network Outage Resolved After 5-Hour Downtime', url: 'https://example.com/solana-outage', source: 'The Block'},
                         {title: 'MicroStrategy Adds 12,000 More BTC to Treasury, Now Holds 226,331 Bitcoin', url: 'https://example.com/microstrategy-btc', source: 'Decrypt'},
-                        {title: 'SEC Delays Decision on Spot Bitcoin ETFs Until October', url: 'https://example.com/sec-delay', source: 'Bloomberg'},
-                        {title: 'Vitalik Buterin Proposes New EIP to Reduce Ethereum Gas Fees by 30%', url: 'https://example.com/vitalik-eip', source: 'CryptoBriefing'}
+                        {title: 'SEC Delays Decision on Spot Bitcoin ETFs Until October', url: 'https://example.com/sec-delay', source: 'Bloomberg'}
                     ];
-                    initNewsTicker(mockNews);
+                    renderNewsList(mockNews);
                 }
             } catch (err) {
-                console.warn('News ticker fetch failed:', err);
+                console.warn('News fetch failed:', err);
                 // Show mock data on error
                 const mockNews = [
                     {title: 'Bitcoin Surges Past $65K as Institutional Adoption Accelerates', url: 'https://example.com/bitcoin-surge', source: 'CoinDesk'},
                     {title: 'Ethereum ETFs Approved by SEC, ETH Price Jumps 12%', url: 'https://example.com/eth-etf', source: 'CoinTelegraph'},
                     {title: 'Solana Network Outage Resolved After 5-Hour Downtime', url: 'https://example.com/solana-outage', source: 'The Block'},
-                    {title: 'MicroStrategy Adds 12,000 More BTC to Treasury, Now Holds 226,331 Bitcoin', url: 'https://example.com/microstrategy-btc', source: 'Decrypt'}
+                    {title: 'MicroStrategy Adds 12,000 More BTC to Treasury, Now Holds 226,331 Bitcoin', url: 'https://example.com/microstrategy-btc', source: 'Decrypt'},
+                    {title: 'Vitalik Buterin Proposes New EIP to Reduce Ethereum Gas Fees by 30%', url: 'https://example.com/vitalik-eip', source: 'CryptoBriefing'}
                 ];
-                initNewsTicker(mockNews);
+                renderNewsList(mockNews);
             }
         }
 
@@ -1094,21 +1093,29 @@
                     (prev.momentum || 0) > (current.momentum || 0) ? prev : current
                 );
 
+                // Check if the top token has changed
+                const tokenChanged = !currentTopToken || currentTopToken !== topToken.symbol;
+
                 // Render the top token info card
                 renderPumpInfoCard(topToken);
 
                 // Load chart for the top token if we have a symbol
                 if (topToken.symbol && pumpChartContainer) {
                     currentTopToken = topToken.symbol;
-                    await loadPumpChart(topToken.symbol);
+                    if (tokenChanged) {
+                        // Only reload chart if the token changed
+                        await loadPumpChart(topToken.symbol);
+                    }
                 }
 
-                // Updated timestamp
+                // Updated timestamp with more details
                 const updated = document.getElementById('pumpUpdated');
                 if (updated) {
-                    updated.textContent = 'Updated ' +
-                        new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) +
-                        ' · auto-refreshes every 60s';
+                    const now = new Date();
+                    updated.textContent = 'Last updated: ' +
+                        now.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit', second: '2-digit'}) +
+                        ' · Next refresh in 60s · Top token: ' + (topToken.symbol || 'N/A').toUpperCase() +
+                        ' (Momentum: ' + (topToken.momentum || 0).toFixed(1) + ')';
                 }
 
             } catch (err) {
