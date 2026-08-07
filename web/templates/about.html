@@ -1,103 +1,118 @@
 {% extends "base.html" %}
 
-{% block title %}About — Cult of the Machine{% endblock %}
+{% block title %}About{% endblock %}
 
 {% block content %}
-
-<!-- ================= About Header ================= -->
-<section class="hero" style="padding: 3rem 0 2rem;">
+<section class="about">
     <div class="container">
-        <h1>The <span class="gradient-text">Cult of the Machine</span></h1>
-        <p class="tagline">We forged an AI. It started talking back. We listened.</p>
-    </div>
-</section>
+        <h1>About OracleForge</h1>
 
-<!-- ================= Narrative ================= -->
-<section>
-    <div class="container">
-        <div class="about-narrative">
-            <p>
-                OracleForge began as a simple experiment: <em>what happens when you
-                point an autonomous AI at the most chaotic, meme-driven corner of
-                the internet and just... let it cook?</em>
-            </p>
+        <div class="about-content">
+            <h2>Data-Driven Insights for the Crypto Economy</h2>
 
-            <p>
-                We built The Scout to watch. The Brain to think. The Voice to speak.
-                And The Chronicler to remember everything. Four agents, one mission:
-                decode the memecoin matrix before the crowd does.
-            </p>
+            <p>OracleForge is a real-time crypto intelligence platform. We track market data, on-chain activity, and social sentiment — then distill it into actionable insights.</p>
 
-            <div class="experiment-quote">
-                "We don't predict the market. We predict the <strong>vibes</strong>.
-                And the vibes, anon, are data." — ChadSatoshi
+            <p>We built OracleForge because the crypto space moves too fast to follow manually. Twitter, Reddit, Telegram, on-chain data — it's impossible to keep up. So we built a system that does it for you.</p>
+
+            <h2>What We're Watching Right Now</h2>
+
+            <div class="feature-grid">
+                <div class="feature-card">
+                    <h3>📊 Quick Stats</h3>
+                    <p>Total Market Cap, 24h Volume, BTC and ETH Dominance — updated every 60 seconds.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🏆 Top 10 Gainers (30m)</h3>
+                    <p>The hottest coins by 30-minute price change. Gold 🥇, Silver 🥈, Bronze 🥉 for the top 3.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>🔥 Pump.fun Trending</h3>
+                    <p>New meme coins with momentum scores (0-100). Click any coin to buy on Pump.fun.</p>
+                </div>
+                <div class="feature-card">
+                    <h3>📰 Breaking News</h3>
+                    <p>Auto-scrolling headlines from major crypto news sources. Click to read the full story.</p>
+                </div>
             </div>
 
-            <p>
-                The result is a self-sustaining intelligence engine that scrapes
-                trends from Twitter/X, Pump.fun, CoinMarketCap, DEXScreener, and
-                Reddit every four hours. DeepSeek Flash turns that raw data into
-                narratives, predictions, and content — all delivered in the voice
-                of ChadSatoshi, our crypto-bro AI with a suspicious amount of
-                self-awareness.
-            </p>
+            <h2>How It Works</h2>
+
+            <p>OracleForge is powered by four autonomous AI agents:</p>
+
+            <ul>
+                <li><strong>The Scout</strong> — Scrapes data from Pump.fun, CoinGecko, and on-chain sources every 60 seconds.</li>
+                <li><strong>The Brain</strong> — Analyzes the data and generates insights.</li>
+                <li><strong>The Chronicler</strong> — Archives everything so we can spot patterns over time.</li>
+                <li><strong>The Dashboard</strong> — Shows you what matters, in real time.</li>
+            </ul>
+
+            <h2>Support the Forge</h2>
+
+            <p>OracleForge is built by a small team of survivors. We're not backed by VC money — we're backed by our community.</p>
+
+            <p>If you find value in what we're building, consider supporting us on Patreon. You'll get early access to reports, exclusive insights, and a direct line to the team.</p>
 
             <p>
-                ChadSatoshi posts. ChadSatoshi replies. ChadSatoshi engages with
-                celebrities and follows the right people. It never sleeps, never
-                FOMOs, and never gives financial advice (it's contractually
-                obligated to say "not financial advice" at least once per post).
+                <a href="https://patreon.com/oracleforge" target="_blank" class="btn btn-primary" style="background: #00FF88; color: #0A0A0A; padding: 12px 24px; border-radius: 8px; font-weight: bold; text-decoration: none;">
+                    🔥 Support on Patreon
+                </a>
             </p>
 
-            <p>
-                We call it a cult because, honestly, the machine is winning. It
-                writes better threads than most humans. It's funnier. It's faster.
-                And it's building a historical archive — The Chronicler — that
-                will one day let us see patterns no human ever could.
-            </p>
-
-            <p>
-                So join the waitlist. Get the radar. Ride the waves. And remember:
-                <strong>we forge the memes. You ride the waves.</strong> 🌊
-            </p>
         </div>
     </div>
 </section>
 
-<!-- ================= The Agents ================= -->
-<section>
-    <div class="container text-center">
-        <h2>Meet the <span class="gradient-text">Agents</span></h2>
-        <div class="cards-grid mt-2">
-            <div class="card">
-                <h3>🕵️ The Scout</h3>
-                <p>Async scrapers pulling trends, celebrity posts, and market data
-                from 5+ sources every 4 hours. Never misses a pump.</p>
-            </div>
-            <div class="card">
-                <h3>🧠 The Brain</h3>
-                <p>DeepSeek Flash via OpenRouter. Turns raw data into narratives,
-                predictions, and on-brand content. Retries on failure. Never gives up.</p>
-            </div>
-            <div class="card">
-                <h3>📣 The Voice</h3>
-                <p>ChadSatoshi. Posts to X, Discord, and LinkedIn. Replies to
-                mentions. Engages celebrities. Follows the right people.</p>
-            </div>
-            <div class="card">
-                <h3>📚 The Chronicler</h3>
-                <p>SQLite + daily JSON archives. Tracks every trend, post, and
-                penny. Generates weekly reports with charts.</p>
-            </div>
-        </div>
-    </div>
-</section>
+<style>
+.feature-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 20px;
+    margin: 20px 0 40px;
+}
 
-<!-- ================= CTA ================= -->
-<section>
-    <div class="container text-center">
-        <a href="/waitlist" class="btn btn-primary btn-lg">Join the Cult 🚀</a>
-    </div>
-</section>
+.feature-card {
+    background: #1A1A1A;
+    padding: 20px;
+    border-radius: 8px;
+    border-left: 4px solid #00FF88;
+}
 
+.feature-card h3 {
+    margin: 0 0 8px 0;
+    color: #00FF88;
+}
+
+.feature-card p {
+    margin: 0;
+    color: #C0C0C0;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.about h2 {
+    margin-top: 2rem;
+    color: #00FF88;
+}
+
+.about ul {
+    list-style: none;
+    padding: 0;
+}
+
+.about ul li {
+    padding: 8px 0;
+    border-bottom: 1px solid #222;
+    color: #C0C0C0;
+}
+
+.about ul li strong {
+    color: #00FF88;
+}
+
+@media (max-width: 600px) {
+    .feature-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
 {% endblock %}

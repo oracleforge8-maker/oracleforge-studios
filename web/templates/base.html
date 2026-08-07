@@ -5,7 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}OracleForge{% endblock %} — OracleForge</title>
     <meta name='impact-site-verification' value='7a9edd5c-6a54-4cd1-ab1f-a90ce089f46a'>
-    <meta name="description" content="OracleForge — Data-driven insights for the crypto economy. AI-powered market intelligence.">
+    <meta name="description" content="OracleForge — Data-driven insights for the crypto economy. Real-time market intelligence, trending coins, and breaking news.">
+    <!-- Inter Font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
     {% block head %}{% endblock %}
 </head>
@@ -14,10 +16,10 @@
 <!-- ================= Navbar ================= -->
 <nav class="navbar" role="navigation" aria-label="Main navigation">
     <div class="container">
-        <a href="/" class="brand">
-            <img src="{{ url_for('static', filename='images/brand/oracleforge-brand.png') }}" alt="OracleForge" style="height: 40px; width: auto; display: inline-block; vertical-align: middle;">
-            <span style="margin-left: 10px; font-size: 1.4rem; font-weight: bold;">OracleForge</span>
-        </a>
+<a href="/" class="brand">
+    <img src="{{ url_for('static', filename='images/logo.svg') }}" alt="OracleForge" style="height: 40px; width: 40px; display: inline-block; vertical-align: middle;">
+    <span style="margin-left: 10px; font-size: 1.4rem; font-weight: bold; font-family: 'Inter', sans-serif;">OracleForge</span>
+</a>
         <button class="nav-toggle" id="navToggle" aria-label="Toggle navigation">☰</button>
         <ul class="nav-links" id="navLinks">
             <li><a href="/">Home</a></li>
