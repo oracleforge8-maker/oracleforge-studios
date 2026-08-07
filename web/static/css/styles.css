@@ -1799,3 +1799,76 @@ section { margin-bottom: 4rem; }
         height: 250px;
     }
 }
+
+/* Quick Stats - Compact Strip */
+.quick-stats-compact {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 0;
+    position: relative;
+    z-index: 2;
+}
+
+.stats-strip {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.stat-item {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.stat-label {
+    font-size: 0.7rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.stat-value {
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--text-primary);
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.stat-divider {
+    width: 1px;
+    height: 28px;
+    background: var(--border);
+}
+
+.stat-updated {
+    font-size: 0.65rem;
+    color: var(--text-secondary);
+    margin-left: auto;
+    white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+    .stats-strip {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 6px;
+    }
+    .stat-item {
+        justify-content: space-between;
+        padding: 4px 0;
+    }
+    .stat-divider {
+        display: none;
+    }
+    .stat-updated {
+        text-align: center;
+        margin-top: 4px;
+    }
+    .quick-stats-compact {
+        padding: 10px 0;
+    }
+}
