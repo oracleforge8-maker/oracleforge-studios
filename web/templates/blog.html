@@ -17,18 +17,27 @@
     </div>
 </section>
 
-<!-- ================= Latest 5 Posts ================= -->
+<!-- ================= Latest Posts ================= -->
 <section>
     <div class="container">
+        <h2 class="section-head">Latest Insights</h2>
         <div class="blog-list">
             {% if posts %}
-                {% for post in posts %}
+                {% for post in posts[:10] %}
                 <article class="blog-card">
                     <div class="meta">
-                        {{ post.platform }} • {{ post.post_type }} • {{ post.created_at[:10] }}
+                        {{ post.created_at[:10] }} • {% if post.platform %}{{ post.platform }} • {% endif %}{% if post.post_type %}{{ post.post_type }}{% endif %}
                     </div>
-                    <h3>{{ post.title or post.content[:80] }}{% if post.content|length > 80 %}{% endif %}</h3>
-                    <p>{{ post.content }}</p>
+                    <h3>{{ post.title or (post.content[:60] + '...') if post.content|length > 60 else post.content }}</h3>
+                    <p>{{ (post.content[:150] + '...') if post.content|length > 150 else post.content }}</p>
+                    <div class="blog-actions">
+                        <a href="#" class="read-more-btn">Read More →</a>
+                    </div>
+                    {% if loop.index == 10 %}
+                    <div class="patreon-promotion">
+                        <p>💚 Enjoying these insights? <a href="/patreon" class="patreon-btn">Support us on Patreon</a> to help us continue providing daily crypto analysis!</p>
+                    </div>
+                    {% endif %}
                 </article>
                 {% endfor %}
             {% else %}

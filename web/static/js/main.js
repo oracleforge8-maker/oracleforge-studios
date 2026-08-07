@@ -362,6 +362,60 @@
         setInterval(loadTicker, POLL_MS);
     }
 
+    // ---------- Blog Auto-Refresh ----------
+    // Blog page auto-refresh for new posts.
+    // Polls /api/blog-posts every 5 minutes to check for new content.
+    const blogList = document.querySelector('.blog-list');
+
+    if (blogList) {
+        const BLOG_POLL_MS = 300000; // 5 minutes
+        let lastPostCount = 0;
+
+        function checkForNewPosts() {
+            const currentPosts = blogList.querySelectorAll('.blog-card');
+            lastPostCount = currentPosts.length;
+
+            // Show a notification if new posts are available
+            const notification = document.createElement('div');
+            notification.className = 'blog-notification';
+            notification.innerHTML = `
+                <div class="blog-notification-content">
+                    <span>📢 New posts available!</span>
+                    <button class="blog-refresh-btn">Refresh Now</button>
+                </div>
+            `;
+            notification.style.display = 'none';
+            document.body.appendChild(notification);
+
+            // Add refresh button handler
+            const refreshBtn = notification.querySelector('.blog-refresh-btn');
+            if (refreshBtn) {
+                refreshBtn.addEventListener('click', function() {
+                    window.location.reload();
+                });
+            }
+
+            // Check for new posts by comparing count
+            setInterval(async function() {
+                try {
+                    const response = await fetch('/api/blog-posts?limit=10');
+                    if (response.ok) {
+                        const data = await response.json();
+                        if (data.posts && data.posts.length > lastPostCount) {
+                            notification.style.display = 'block';
+                            lastPostCount = data.posts.length;
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Blog post check failed:', error);
+                }
+            }, BLOG_POLL_MS);
+        }
+
+        // Start checking for new posts
+        checkForNewPosts();
+    }
+
     // ---------- Top 10 Gainers table ----------
     // Homepage table of the top 10 coins by 30-minute price momentum.
     // Polls /api/top-gainers every 60s, renders medals for the top 3, and
