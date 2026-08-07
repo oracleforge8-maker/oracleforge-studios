@@ -704,6 +704,98 @@ section { margin-bottom: 4rem; }
 }
 
 /* ============================================================
+   Breaking News Ticker
+   ============================================================ */
+
+.news-ticker {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.4rem 0.8rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 0 18px rgba(255, 68, 68, 0.08);
+    overflow: hidden;
+}
+
+.news-ticker .ticker-label {
+    flex: 0 0 auto;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--red);
+    background: rgba(255, 68, 68, 0.15);
+    padding: 0.2rem 0.6rem;
+    border-radius: 6px;
+    white-space: nowrap;
+}
+
+.news-track {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+    overflow: hidden;
+    animation: newsScroll 30s linear infinite;
+}
+
+/* Hover anywhere on the ticker pauses the scroll */
+.news-ticker:hover .news-track {
+    animation-play-state: paused;
+}
+
+@keyframes newsScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.news-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    color: var(--silver);
+    flex: 0 0 auto;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.news-item:hover {
+    color: var(--white);
+}
+
+.news-item::after {
+    content: "•";
+    color: var(--border);
+    opacity: 0.35;
+    margin-left: 0.1rem;
+}
+
+.news-item:last-child::after {
+    content: "";
+}
+
+.news-source {
+    font-weight: 700;
+    color: var(--red);
+    font-size: 0.78rem;
+}
+
+.news-title {
+    font-weight: 600;
+    color: var(--white);
+}
+
+@media (max-width: 560px) {
+    .news-item { font-size: 0.72rem; }
+    .news-track { animation-duration: 20s; }
+}
+
+/* ============================================================
    Market Ticker
    ============================================================ */
 
@@ -787,23 +879,109 @@ section { margin-bottom: 4rem; }
 }
 
 /* ============================================================
-   Top 10 Gainers Table
+   Quick Stats Grid
    ============================================================ */
 
-.top-gainers-section {
+.quick-stats-section {
     margin-bottom: 4rem;
 }
 
-.top-gainers-section .section-head h2 {
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 1.2rem;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.stat-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.6rem 1.4rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    text-align: center;
+}
+
+.stat-card:hover {
+    transform: translateY(-4px);
+    box-shadow: var(--glow-purple);
+}
+
+.stat-label {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: var(--silver);
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.6rem;
+    opacity: 0.85;
+}
+
+.stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: var(--green);
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    line-height: 1.2;
+}
+
+.stats-updated {
+    text-align: center;
+    font-size: 0.8rem;
+    color: var(--silver);
+    opacity: 0.7;
+    margin-top: 1rem;
+    font-style: italic;
+}
+
+/* ============================================================
+   Pump.fun Trending Grid
+   ============================================================ */
+
+.pump-trending-section {
+    margin-bottom: 4rem;
+}
+
+.pump-trending-section .section-head h2 {
     font-size: clamp(1.4rem, 2.8vw, 2rem);
 }
 
-.section-sub {
-    color: var(--silver);
-    opacity: 0.8;
-    font-size: 0.9rem;
-    max-width: 720px;
-    margin: 0.5rem auto 0;
+.pump-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    max-width: 1100px;
+    margin: 0 auto;
+}
+
+.pump-info-card {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 2rem;
+    min-height: 300px;
+}
+
+.pump-chart-container {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1rem;
+    height: 300px;
+}
+
+.pump-chart {
+    width: 100%;
+    height: 100%;
+}
+
+.pump-trending-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 1.5rem;
+    max-width: 1100px;
+    margin: 0 auto;
 }
 
 .gainers-table-wrap {
@@ -1120,5 +1298,15 @@ section { margin-bottom: 4rem; }
 @media (max-width: 560px) {
     .pump-trending-grid {
         grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .pump-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .pump-chart-container {
+        height: 250px;
     }
 }

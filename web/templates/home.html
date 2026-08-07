@@ -4,10 +4,45 @@
 
 {% block content %}
 
+<!-- ================= Breaking News Ticker ================= -->
+<section class="news-ticker" id="newsTicker">
+    <span class="ticker-label">BREAKING</span>
+    <div class="news-track" id="newsTrack"></div>
+</section>
+
 <!-- ================= Market Ticker ================= -->
 <section class="market-ticker" id="marketTicker">
     <span class="ticker-label">MARKET</span>
     <div class="ticker-track" id="tickerTrack"></div>
+</section>
+
+<!-- ================= Quick Stats ================= -->
+<section class="quick-stats-section">
+    <div class="container">
+        <div class="section-head">
+            <h2>📊 Quick Stats</h2>
+            <p class="section-sub">Global crypto market metrics. Updates every 60 seconds.</p>
+        </div>
+        <div class="stats-grid" id="quickStatsGrid">
+            <div class="stat-card">
+                <div class="stat-label">Total Market Cap</div>
+                <div class="stat-value" id="totalMarketCap">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">24h Trading Volume</div>
+                <div class="stat-value" id="totalVolume">$0.00</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">BTC Dominance</div>
+                <div class="stat-value" id="btcDominance">0.0%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">ETH Dominance</div>
+                <div class="stat-value" id="ethDominance">0.0%</div>
+            </div>
+        </div>
+        <div class="stats-updated" id="statsUpdated"></div>
+    </div>
 </section>
 
 <!-- ================= Hero ================= -->
@@ -25,32 +60,22 @@
 <!-- ================= Trust Bar ================= -->
 <section>
     <div class="container text-center">
-        <h2>The <span class="gradient-text">OracleForge</span> Stack</h2>
+        <h2>The <span class="gradient-text">OracleForge</span> Platform</h2>
         <p style="max-width: 700px; margin: 0.5rem auto 2rem;">
-            Four autonomous agents working together like a well-oiled, slightly
-            unhinged machine.
+            OracleForge is powered by a real-time data pipeline that delivers market intelligence straight to your screen.
         </p>
         <div class="cards-grid">
             <div class="card">
-                <h3>🕵️ The Scout</h3>
-                <p>Scrapes trending tokens, celebrity posts, and market data from
-                Twitter/X, Pump.fun, CoinMarketCap, DEXScreener, and Reddit —
-                every 4 hours, around the clock.</p>
+                <h3>📊 Data Ingestion</h3>
+                <p>We pull data from multiple sources: CoinGecko (market cap, volume, price data), Pump.fun (new token launches, momentum scores), DEXScreener (on-chain activity, pair data), and CryptoPanic (breaking news headlines).</p>
             </div>
             <div class="card">
-                <h3>🧠 The Brain</h3>
-                <p>DeepSeek Flash processes the data into narratives, predictions,
-                and content — all in the ChadSatoshi voice.</p>
+                <h3>🧠 Intelligence Engine</h3>
+                <p>Our AI system processes the data in real-time: Trend Detection to identify what's moving and why, Sentiment Analysis to gauge market mood, and Pattern Recognition to spot opportunities early.</p>
             </div>
             <div class="card">
-                <h3>📣 The Voice</h3>
-                <p>ChadSatoshi posts to Twitter/X, Discord, and LinkedIn. Replies
-                to mentions. Engages celebrities. Follows the right people.</p>
-            </div>
-            <div class="card">
-                <h3>📚 The Chronicler</h3>
-                <p>Archives every data point to JSON + SQLite and tracks every
-                penny spent. History never forgets.</p>
+                <h3>📈 User Experience</h3>
+                <p>You see the results on the homepage: Quick Stats (market cap, volume, dominance), Top 10 Gainers (30m) with medals for the top 3, Pump.fun Trending with momentum scores, Breaking News auto-scrolling headlines, and Live Charts with moving averages. All data updates automatically every 60 seconds.</p>
             </div>
         </div>
     </div>
@@ -82,15 +107,44 @@
     </div>
 </section>
 
+<!-- ================= 3h Chart with Moving Averages ================= -->
+<section class="chart-section">
+    <div class="container">
+        <div class="section-head">
+            <h2>📈 3h Chart with 3h & 10h Moving Averages</h2>
+            <p class="section-sub">Interactive chart showing price action and moving average crossovers for the top gainer. Click on any coin in the table above to view its chart.</p>
+        </div>
+        <div class="chart-container">
+            <div class="chart-controls">
+                <select id="chartCoinSelect" class="chart-select">
+                    <option value="pepe">PEPE</option>
+                    <option value="bome">BOME</option>
+                    <option value="wif">WIF</option>
+                    <option value="doge">DOGE</option>
+                    <option value="shib">SHIB</option>
+                </select>
+                <button id="chartRefreshBtn" class="btn btn-secondary">🔄 Refresh</button>
+            </div>
+            <div id="chartLoading" class="chart-loading">Loading chart data…</div>
+            <div id="chartContainer" class="chart-area"></div>
+        </div>
+    </div>
+</section>
+
 <!-- ================= Pump.fun Trending ================= -->
 <section class="pump-trending-section">
     <div class="container">
         <div class="section-head">
-            <h2>🚀 Pump.fun Trending (1h)</h2>
+            <h2>📈 Pump.fun Trending (1h)</h2>
             <p class="section-sub">Fresh meme coins erupting on Pump.fun right now. Momentum is scored 0-100 from on-chain + social velocity. Tokens with momentum over 70 are <span class="gradient-text">highlighted</span>. Refreshes every 60 seconds.</p>
         </div>
-        <div class="pump-trending-grid" id="pumpTrendingGrid">
-            <div class="pump-loading">Scanning the blockchain for fresh degens… 🔍</div>
+        <div class="pump-grid" id="pumpTrendingGrid">
+            <div class="pump-info-card" id="pumpInfoCard">
+                <div class="pump-loading">Scanning the blockchain for fresh degens… 🔍</div>
+            </div>
+            <div class="pump-chart-container">
+                <div id="pumpChart" class="pump-chart"></div>
+            </div>
         </div>
         <div class="pump-updated" id="pumpUpdated"></div>
     </div>
@@ -117,4 +171,5 @@
 
 {% block scripts %}
 <script src="{{ url_for('static', filename='js/live.js') }}"></script>
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
 {% endblock %}

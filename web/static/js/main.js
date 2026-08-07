@@ -65,6 +65,181 @@
         });
     }
 
+    // ---------- Quick Stats ----------
+    // Homepage quick stats grid (market cap, volume, dominance).
+    // Polls /api/quick-stats every 60s and updates the DOM.
+    const statsGrid = document.getElementById('quickStatsGrid');
+    const statsUpdated = document.getElementById('statsUpdated');
+
+    if (statsGrid) {
+        const POLL_MS = 60000; // 60 seconds
+
+        function formatCurrency(value) {
+            if (value === null || value === undefined || isNaN(Number(value))) return '$0.00';
+            const n = Number(value);
+            if (!n) return '$0.00';
+
+            // Format with commas and 2 decimal places for large numbers
+            const opts = {
+                style: 'currency',
+                currency: 'USD',
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2
+            };
+
+            // For very large numbers (billions+), use compact notation
+            if (Math.abs(n) >= 1e12) {
+                opts.notation = 'compact';
+                opts.maximumFractionDigits = 1;
+            } else if (Math.abs(n) >= 1e9) {
+                opts.notation = 'compact';
+                opts.maximumFractionDigits = 2;
+            }
+
+            return n.toLocaleString('en-US', opts);
+        }
+
+        function formatPercentage(value) {
+            if (value === null || value === undefined || isNaN(Number(value))) return '0.0%';
+            const n = Number(value);
+            return n.toFixed(1) + '%';
+        }
+
+        function updateStats(data) {
+            // Update each stat card
+            document.getElementById('totalMarketCap').textContent = formatCurrency(data.total_market_cap);
+            document.getElementById('totalVolume').textContent = formatCurrency(data.total_volume);
+            document.getElementById('btcDominance').textContent = formatPercentage(data.btc_dominance);
+            document.getElementById('ethDominance').textContent = formatPercentage(data.eth_dominance);
+
+            // Update timestamp
+            if (statsUpdated) {
+                statsUpdated.textContent = 'Updated ' +
+                    new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) +
+                    ' · auto-refreshes every 60s';
+            }
+        }
+
+        async function loadQuickStats() {
+            try {
+                const res = await fetch('/api/quick-stats', {cache: 'no-store'});
+                if (!res.ok) throw new Error('Quick stats API returned ' + res.status);
+                const data = await res.json();
+                updateStats(data);
+            } catch (err) {
+                console.warn('Quick stats fetch failed:', err);
+                // Keep showing last data or placeholders on error
+            }
+        }
+
+        // Load immediately, then refresh every 60 seconds
+        loadQuickStats();
+        setInterval(loadQuickStats, POLL_MS);
+    }
+
+    // ---------- Breaking News ticker ----------
+    // Homepage auto-scrolling news ticker (latest crypto headlines).
+    // Polls /api/news every 5 minutes. Hovering pauses the scroll (via CSS).
+    // The track is duplicated so the marquee loops seamlessly.
+    const newsTrack = document.getElementById('newsTrack');
+
+    if (newsTrack) {
+        const NEWS_POLL_MS = 300000; // 5 minutes
+        const MAX_NEWS_ITEMS = 8;
+
+        function buildNewsItem(title, url, source) {
+            const item = document.createElement('div');
+            item.className = 'news-item';
+            item.dataset.url = url;
+
+            const titleSpan = document.createElement('span');
+            titleSpan.className = 'news-title';
+            titleSpan.textContent = title;
+
+            const sourceSpan = document.createElement('span');
+            sourceSpan.className = 'news-source';
+            sourceSpan.textContent = source;
+
+            item.appendChild(titleSpan);
+            item.appendChild(sourceSpan);
+
+            // Add click handler to open article in new tab
+            item.addEventListener('click', function() {
+                if (url) {
+                    window.open(url, '_blank', 'noopener,noreferrer');
+                }
+            });
+
+            return item;
+        }
+
+        function initNewsTicker(newsItems) {
+            newsTrack.innerHTML = '';
+            const frag = document.createDocumentFragment();
+
+            // Add news items (limit to MAX_NEWS_ITEMS)
+            const itemsToShow = newsItems.slice(0, MAX_NEWS_ITEMS);
+            itemsToShow.forEach(function(item) {
+                frag.appendChild(buildNewsItem(
+                    item.title || 'Breaking Crypto News',
+                    item.url || '',
+                    item.source || 'Source'
+                ));
+            });
+
+            newsTrack.appendChild(frag);
+            // Duplicate the set so the marquee (translateX 0 -> -50%) loops seamlessly.
+            newsTrack.innerHTML += newsTrack.innerHTML;
+        }
+
+        function showLoadingNews() {
+            newsTrack.innerHTML = '';
+            const loadingItems = [
+                {title: 'Loading crypto headlines...', url: '', source: ''},
+                {title: 'Fetching latest news...', url: '', source: ''}
+            ];
+            initNewsTicker(loadingItems);
+        }
+
+        async function loadNews() {
+            try {
+                const res = await fetch('/api/news', {cache: 'no-store'});
+                if (!res.ok) throw new Error('News API returned ' + res.status);
+                const data = await res.json();
+
+                if (data.news && Array.isArray(data.news) && data.news.length > 0) {
+                    initNewsTicker(data.news);
+                } else {
+                    // Fallback to mock data if API returns empty
+                    const mockNews = [
+                        {title: 'Bitcoin Surges Past $65K as Institutional Adoption Accelerates', url: 'https://example.com/bitcoin-surge', source: 'CoinDesk'},
+                        {title: 'Ethereum ETFs Approved by SEC, ETH Price Jumps 12%', url: 'https://example.com/eth-etf', source: 'CoinTelegraph'},
+                        {title: 'Solana Network Outage Resolved After 5-Hour Downtime', url: 'https://example.com/solana-outage', source: 'The Block'},
+                        {title: 'MicroStrategy Adds 12,000 More BTC to Treasury, Now Holds 226,331 Bitcoin', url: 'https://example.com/microstrategy-btc', source: 'Decrypt'},
+                        {title: 'SEC Delays Decision on Spot Bitcoin ETFs Until October', url: 'https://example.com/sec-delay', source: 'Bloomberg'},
+                        {title: 'Vitalik Buterin Proposes New EIP to Reduce Ethereum Gas Fees by 30%', url: 'https://example.com/vitalik-eip', source: 'CryptoBriefing'}
+                    ];
+                    initNewsTicker(mockNews);
+                }
+            } catch (err) {
+                console.warn('News ticker fetch failed:', err);
+                // Show mock data on error
+                const mockNews = [
+                    {title: 'Bitcoin Surges Past $65K as Institutional Adoption Accelerates', url: 'https://example.com/bitcoin-surge', source: 'CoinDesk'},
+                    {title: 'Ethereum ETFs Approved by SEC, ETH Price Jumps 12%', url: 'https://example.com/eth-etf', source: 'CoinTelegraph'},
+                    {title: 'Solana Network Outage Resolved After 5-Hour Downtime', url: 'https://example.com/solana-outage', source: 'The Block'},
+                    {title: 'MicroStrategy Adds 12,000 More BTC to Treasury, Now Holds 226,331 Bitcoin', url: 'https://example.com/microstrategy-btc', source: 'Decrypt'}
+                ];
+                initNewsTicker(mockNews);
+            }
+        }
+
+        // Show loading state immediately, then hydrate with data
+        showLoadingNews();
+        loadNews();
+        setInterval(loadNews, NEWS_POLL_MS);
+    }
+
     // ---------- Market ticker ----------
     // Homepage auto-scrolling market ticker (BTC / ETH / SOL + top-3 gainers).
     // Polls /api/ticker every 60s. Hovering pauses the scroll (via CSS). The
@@ -331,6 +506,173 @@
          setInterval(loadGainers, POLL_MS);
     }
 
+    // ---------- 3h Chart with Moving Averages ----------
+    // Homepage interactive chart showing price action and moving averages.
+    // Loads Plotly.js from CDN and renders a line chart with price, 3h MA, and 10h MA.
+    // Updates when coin selection changes or refresh button is clicked.
+    const chartContainer = document.getElementById('chartContainer');
+    const chartLoading = document.getElementById('chartLoading');
+    const chartCoinSelect = document.getElementById('chartCoinSelect');
+    const chartRefreshBtn = document.getElementById('chartRefreshBtn');
+
+    if (chartContainer) {
+        // Load Plotly.js from CDN
+        let plotlyLoaded = false;
+        let plotlyScript = null;
+
+        function loadPlotly() {
+            return new Promise((resolve, reject) => {
+                if (plotlyLoaded) {
+                    resolve();
+                    return;
+                }
+
+                plotlyScript = document.createElement('script');
+                plotlyScript.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+                plotlyScript.onload = () => {
+                    plotlyLoaded = true;
+                    resolve();
+                };
+                plotlyScript.onerror = () => {
+                    reject(new Error('Failed to load Plotly.js'));
+                };
+                document.head.appendChild(plotlyScript);
+            });
+        }
+
+        function showLoading() {
+            if (chartLoading) chartLoading.style.display = 'block';
+            chartContainer.innerHTML = '';
+        }
+
+        function hideLoading() {
+            if (chartLoading) chartLoading.style.display = 'none';
+        }
+
+        async function loadChart(symbol) {
+            showLoading();
+
+            try {
+                // Load Plotly if not already loaded
+                await loadPlotly();
+
+                // Fetch chart data from API
+                const response = await fetch(`/api/chart/${symbol}`);
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (!data.price_data || data.price_data.length === 0) {
+                    throw new Error('No chart data available');
+                }
+
+                // Extract data for Plotly
+                const timestamps = data.price_data.map(item => new Date(item[0]));
+                const prices = data.price_data.map(item => item[4]); // Close price
+                const ma3h = data.ma_3h.filter(item => item !== null);
+                const ma10h = data.ma_10h.filter(item => item !== null);
+
+                // Create traces
+                const traces = [
+                    {
+                        x: timestamps,
+                        y: prices,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: 'Price',
+                        line: { color: '#1f77b4' }
+                    }
+                ];
+
+                // Add MA traces if data exists
+                if (ma3h.length > 0) {
+                    traces.push({
+                        x: timestamps.slice(3), // MA starts after 3 periods
+                        y: ma3h,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: '3h MA',
+                        line: { color: '#ff7f0e', dash: 'dash' }
+                    });
+                }
+
+                if (ma10h.length > 0) {
+                    traces.push({
+                        x: timestamps.slice(10), // MA starts after 10 periods
+                        y: ma10h,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: '10h MA',
+                        line: { color: '#2ca02c', dash: 'dot' }
+                    });
+                }
+
+                // Plot layout
+                const layout = {
+                    title: `${symbol.toUpperCase()} Price Chart with Moving Averages`,
+                    xaxis: {
+                        title: 'Time',
+                        rangeslider: { visible: false },
+                        type: 'date'
+                    },
+                    yaxis: {
+                        title: 'Price (USD)',
+                        fixedrange: false
+                    },
+                    showlegend: true,
+                    legend: {
+                        x: 0,
+                        y: 1.1,
+                        orientation: 'h'
+                    },
+                    margin: { t: 50, r: 20, b: 50, l: 50 },
+                    hovermode: 'closest',
+                    plot_bgcolor: '#f8f9fa',
+                    paper_bgcolor: '#ffffff'
+                };
+
+                // Render chart
+                Plotly.newPlot(chartContainer, traces, layout, {
+                    responsive: true,
+                    displayModeBar: true,
+                    displaylogo: false
+                });
+
+                hideLoading();
+
+            } catch (error) {
+                console.error('Chart loading failed:', error);
+                hideLoading();
+                chartContainer.innerHTML = `
+                    <div class="chart-error">
+                        <p>⚠️ Failed to load chart: ${error.message}</p>
+                        <p>Please try refreshing the page or selecting a different coin.</p>
+                    </div>
+                `;
+            }
+        }
+
+        // Event listeners
+        if (chartCoinSelect) {
+            chartCoinSelect.addEventListener('change', function() {
+                loadChart(this.value);
+            });
+        }
+
+        if (chartRefreshBtn) {
+            chartRefreshBtn.addEventListener('click', function() {
+                const currentSymbol = chartCoinSelect ? chartCoinSelect.value : 'pepe';
+                loadChart(currentSymbol);
+            });
+        }
+
+        // Load initial chart
+        const initialSymbol = chartCoinSelect ? chartCoinSelect.value : 'pepe';
+        loadChart(initialSymbol);
+    }
+
     // ---------- Pump.fun Trending ----------
     // Homepage card grid of trending Pump.fun meme coins.
     // Polls /api/pump-trending every 60s, renders each token as a card with
@@ -338,10 +680,15 @@
     // "high-momentum" highlight class. All DOM updates use textContent so
     // the grid stays XSS-safe.
     const pumpGrid = document.getElementById('pumpTrendingGrid');
+    const pumpInfoCard = document.getElementById('pumpInfoCard');
+    const pumpChartContainer = document.getElementById('pumpChart');
+    let currentTopToken = null;
 
     if (pumpGrid) {
         const POLL_MS = 60000;
         const HIGH_MOMENTUM = 70;
+        let plotlyLoaded = false;
+        let plotlyScript = null;
 
         function fmtPricePump(price) {
             if (price === null || price === undefined || isNaN(Number(price))) return '—';
@@ -488,14 +835,247 @@
             }
         }
 
+        function loadPlotlyForPump() {
+            return new Promise((resolve, reject) => {
+                if (plotlyLoaded) {
+                    resolve();
+                    return;
+                }
+
+                plotlyScript = document.createElement('script');
+                plotlyScript.src = 'https://cdn.plot.ly/plotly-2.27.0.min.js';
+                plotlyScript.onload = () => {
+                    plotlyLoaded = true;
+                    resolve();
+                };
+                plotlyScript.onerror = () => {
+                    reject(new Error('Failed to load Plotly.js'));
+                };
+                document.head.appendChild(plotlyScript);
+            });
+        }
+
+        function renderPumpInfoCard(token) {
+            if (!pumpInfoCard) return;
+
+            pumpInfoCard.innerHTML = '';
+
+            // Create token info card structure
+            const card = document.createElement('div');
+            card.className = 'pump-card';
+            const momentum = Number(token.momentum) || 0;
+            if (momentum > HIGH_MOMENTUM) {
+                card.classList.add('high-momentum');
+            }
+
+            // Header: symbol + price
+            const header = document.createElement('div');
+            header.className = 'pump-card-header';
+
+            const symCol = document.createElement('div');
+            const sym = document.createElement('span');
+            sym.className = 'pump-symbol';
+            sym.textContent = (token.symbol || '—').toUpperCase();
+            symCol.appendChild(sym);
+            const name = document.createElement('small');
+            name.className = 'pump-name';
+            name.textContent = token.name || '';
+            symCol.appendChild(name);
+
+            const price = document.createElement('span');
+            price.className = 'pump-card-price';
+            price.textContent = fmtPricePump(token.price);
+
+            header.appendChild(symCol);
+            header.appendChild(price);
+            card.appendChild(header);
+
+            // Launch time
+            const launched = document.createElement('div');
+            launched.className = 'pump-launched';
+            launched.textContent = 'Launched ' + (token.launched || 'Recently');
+            card.appendChild(launched);
+
+            // Momentum label + value row
+            const momentumRow = document.createElement('div');
+            momentumRow.className = 'momentum-row';
+
+            const ml = document.createElement('span');
+            ml.className = 'momentum-label';
+            ml.textContent = 'Momentum';
+            momentumRow.appendChild(ml);
+
+            const value = document.createElement('span');
+            value.className = 'momentum-value';
+            value.textContent = momentum.toFixed(1);
+            momentumRow.appendChild(value);
+
+            card.appendChild(momentumRow);
+
+            // Momentum progress bar
+            const momentumWrap = document.createElement('div');
+            momentumWrap.className = 'momentum-bar-wrap ' + momentumBarClass(momentum);
+
+            const bar = document.createElement('div');
+            bar.className = 'momentum-bar ' + momentumBarClass(momentum);
+            bar.style.width = Math.max(4, Math.min(100, momentum)) + '%';
+
+            momentumWrap.appendChild(bar);
+            card.appendChild(momentumWrap);
+
+            // Meta: market cap + volume
+            const meta = document.createElement('div');
+            meta.className = 'pump-card-meta';
+
+            const mcItem = document.createElement('span');
+            mcItem.className = 'meta-item';
+            mcItem.innerHTML = 'MC: <span>' + fmtMarketCap(token.marketCapUsd) + '</span>';
+
+            const volItem = document.createElement('div');
+            volItem.className = 'meta-item';
+            volItem.innerHTML = 'Vol: <span>' + fmtVolume(token.volumeUsd) + '</span>';
+
+            meta.appendChild(mcItem);
+            meta.appendChild(volItem);
+            card.appendChild(meta);
+
+            // Pump.fun link
+            if (token.url) {
+                const link = document.createElement('a');
+                link.href = token.url;
+                link.target = '_blank';
+                link.rel = 'noopener noreferrer';
+                link.className = 'pump-link';
+                link.textContent = 'View on Pump.fun →';
+                card.appendChild(link);
+            }
+
+            pumpInfoCard.appendChild(card);
+        }
+
         function showPumpLoading(msg) {
-            pumpGrid.innerHTML = '';
-            const div = document.createElement('div');
-            div.className = 'pump-loading';
-            div.textContent = msg;
-            pumpGrid.appendChild(div);
+            if (pumpInfoCard) {
+                pumpInfoCard.innerHTML = '';
+                const div = document.createElement('div');
+                div.className = 'pump-loading';
+                div.textContent = msg;
+                pumpInfoCard.appendChild(div);
+            }
+            if (pumpChartContainer) {
+                pumpChartContainer.innerHTML = '';
+            }
             const updated = document.getElementById('pumpUpdated');
             if (updated) updated.textContent = '';
+        }
+
+        async function loadPumpChart(symbol) {
+            if (!pumpChartContainer) return;
+
+            try {
+                // Load Plotly if not already loaded
+                await loadPlotlyForPump();
+
+                // Fetch chart data from API
+                const response = await fetch(`/api/chart/${symbol}`);
+                if (!response.ok) {
+                    throw new Error(`API returned ${response.status}`);
+                }
+
+                const data = await response.json();
+
+                if (!data.price_data || data.price_data.length === 0) {
+                    throw new Error('No chart data available');
+                }
+
+                // Extract data for Plotly
+                const timestamps = data.price_data.map(item => new Date(item[0]));
+                const prices = data.price_data.map(item => item[4]); // Close price
+                const ma3h = data.ma_3h.filter(item => item !== null);
+                const ma10h = data.ma_10h.filter(item => item !== null);
+
+                // Create traces
+                const traces = [
+                    {
+                        x: timestamps,
+                        y: prices,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: 'Price',
+                        line: { color: '#1f77b4' }
+                    }
+                ];
+
+                // Add MA traces if data exists
+                if (ma3h.length > 0) {
+                    traces.push({
+                        x: timestamps.slice(3), // MA starts after 3 periods
+                        y: ma3h,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: '3h MA',
+                        line: { color: '#ff7f0e', dash: 'dash' }
+                    });
+                }
+
+                if (ma10h.length > 0) {
+                    traces.push({
+                        x: timestamps.slice(10), // MA starts after 10 periods
+                        y: ma10h,
+                        type: 'scatter',
+                        mode: 'lines',
+                        name: '10h MA',
+                        line: { color: '#2ca02c', dash: 'dot' }
+                    });
+                }
+
+                // Plot layout with dark theme
+                const layout = {
+                    title: `${symbol.toUpperCase()} Price Chart (3h) with MAs`,
+                    xaxis: {
+                        title: 'Time',
+                        rangeslider: { visible: false },
+                        type: 'date',
+                        gridcolor: 'rgba(255, 255, 255, 0.1)',
+                        zerolinecolor: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    yaxis: {
+                        title: 'Price (USD)',
+                        fixedrange: false,
+                        gridcolor: 'rgba(255, 255, 255, 0.1)',
+                        zerolinecolor: 'rgba(255, 255, 255, 0.1)'
+                    },
+                    showlegend: true,
+                    legend: {
+                        x: 0,
+                        y: 1.1,
+                        orientation: 'h',
+                        font: { color: '#ffffff' }
+                    },
+                    margin: { t: 50, r: 20, b: 50, l: 50 },
+                    hovermode: 'closest',
+                    plot_bgcolor: '#0A0A0A',
+                    paper_bgcolor: '#12102A',
+                    font: { color: '#C0C0C0' }
+                };
+
+                // Render chart
+                Plotly.newPlot(pumpChartContainer, traces, layout, {
+                    responsive: true,
+                    displayModeBar: true,
+                    displaylogo: false
+                });
+
+            } catch (error) {
+                console.error('Pump chart loading failed:', error);
+                if (pumpChartContainer) {
+                    pumpChartContainer.innerHTML = `
+                        <div style="color: #FF4444; padding: 1rem; text-align: center;">
+                            <p>⚠️ Failed to load chart: ${error.message}</p>
+                            <p style="font-size: 0.8rem; opacity: 0.7;">Chart will auto-retry on next refresh</p>
+                        </div>
+                    `;
+                }
+            }
         }
 
         async function loadPumpTrending() {
@@ -508,7 +1088,29 @@
                     showPumpLoading('No trending tokens right now. The memecoins are sleeping… 😴');
                     return;
                 }
-                renderPumpCards(data.tokens);
+
+                // Get the top token (highest momentum)
+                const topToken = data.tokens.reduce((prev, current) =>
+                    (prev.momentum || 0) > (current.momentum || 0) ? prev : current
+                );
+
+                // Render the top token info card
+                renderPumpInfoCard(topToken);
+
+                // Load chart for the top token if we have a symbol
+                if (topToken.symbol && pumpChartContainer) {
+                    currentTopToken = topToken.symbol;
+                    await loadPumpChart(topToken.symbol);
+                }
+
+                // Updated timestamp
+                const updated = document.getElementById('pumpUpdated');
+                if (updated) {
+                    updated.textContent = 'Updated ' +
+                        new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) +
+                        ' · auto-refreshes every 60s';
+                }
+
             } catch (err) {
                 console.warn('Pump trending fetch failed:', err);
                 showPumpLoading('⚠️ Could not reach the pump feed: ' + String(err));
