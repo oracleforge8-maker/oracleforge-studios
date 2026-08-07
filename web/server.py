@@ -25,6 +25,7 @@ from __future__ import annotations
 import re
 from typing import Any, Dict, List
 
+import requests
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
 
@@ -126,6 +127,198 @@ def api_trends():
     db = _db()
     trends = db.latest_trends(limit=limit)
     return jsonify({"trends": trends})
+
+
+# ---------------------------------------------------------------------------
+# Homepage market ticker (CoinGecko)
+# ---------------------------------------------------------------------------
+# Public schema (returned by /api/ticker):
+#     {
+#         "btc": {"price": 0, "change_24h": 0},
+#         "eth": {"price": 0, "change_24h": 0},
+#         "sol": {"price": 0, "change_24h": 0},
+#         "top_gainers": [
+#             {"rank": 1, "symbol": "PEPE", "price": 0, "change_30m": 0},
+#             {"rank": 2, "symbol": "DOGE", "price": 0, "change_30m": 0},
+#             {"rank": 3, "symbol": "SHIB", "price": 0, "change_30m": 0},
+#         ]
+#     }
+#
+# Live data is pulled from CoinGecko. When COINGECKO_API_KEY is unset (or the
+# API is unreachable) we fall back to branded mock data so the ticker always
+# renders — the same graceful-degradation pattern used by the Scout.
+
+#: CoinGecko API v3 base URL
+COINGECKO_BASE = "https://api.coingecko.com/api/v3"
+
+#: CoinGecko coin IDs for the major pairs the ticker highlights
+_TICKER_COINS = {
+    "btc": "bitcoin",
+    "eth": "ethereum",
+    "sol": "solana",
+}
+
+#: Number of top gainers surfaced by the ticker
+_TICKER_GAINERS_LIMIT = 3
+
+#: Per-request hard timeout (seconds) so a slow CG can never stall the page
+_COINGECKO_TIMEOUT = 10
+
+
+def _coingecko_headers() -> Dict[str, str]:
+    """Build request headers for a CoinGecko call.
+
+    Injects the configured API key (if any). CoinGecko accepts the key via the
+    ``x-cg-pro-api-key`` header (paid plans) or ``x-cg-demo-api-key`` (free/demo)
+    — we send the pro header; demo keys generally work here too. The request
+    is best-effort: the endpoint degrades to mock data on any failure.
+
+    Returns:
+        Headers dict, including the API key header when configured.
+    """
+    headers: Dict[str, str] = {"accept": "application/json"}
+    key = config.env("COINGECKO_API_KEY")
+    if key:
+        headers["x-cg-pro-api-key"] = key
+    return headers
+
+
+def _coingecko_simple_prices() -> Dict[str, Dict[str, float]]:
+    """Fetch BTC/ETH/SOL prices + 24h change from CoinGecko /simple/price.
+
+    Returns:
+        Dict keyed by ticker symbol ("btc"/"eth"/"sol") with *price* and
+        *change_24h* keys.
+    """
+    resp = requests.get(
+        f"{COINGECKO_BASE}/simple/price",
+        params={
+            "ids": ",".join(_TICKER_COINS.values()),
+            "vs_currencies": "usd",
+            "include_24hr_change": "true",
+        },
+        headers=_coingecko_headers(),
+        timeout=_COINGECKO_TIMEOUT,
+    )
+    resp.raise_for_status()
+    data = resp.json()
+
+    out: Dict[str, Dict[str, float]] = {}
+    for symbol, coin_id in _TICKER_COINS.items():
+        entry = data.get(coin_id, {}) or {}
+        out[symbol] = {
+            "price": float(entry.get("usd", 0) or 0),
+            "change_24h": float(entry.get("usd_24h_change", 0) or 0),
+        }
+    return out
+
+
+def _coingecko_top_gainers() -> List[Dict[str, Any]]:
+    """Fetch the top gainers ranked by the finest available momentum (1h).
+
+    CoinGecko's public API does not expose a 30m price change, so we rank by
+    the 1h change (``price_change_percentage_1h_in_currency``) — the finest
+    timeframe available without a paid endpoint — and surface it under the
+    ``change_30m`` key in the ticker payload. The mock fallback supplies
+    genuine 30m-style figures for demo mode.
+
+    We sort client-side because the ``order`` query param is not reliably
+    honoured by the demo endpoint.
+
+    Returns:
+        List of dicts: {"rank", "symbol", "price", "change_30m"}.
+    """
+    resp = requests.get(
+        f"{COINGECKO_BASE}/coins/markets",
+        params={
+            "vs_currency": "usd",
+            "order": "market_cap_desc",
+            "per_page": 100,
+            "page": 1,
+            "price_change_percentage": "1h",
+        },
+        headers=_coingecko_headers(),
+        timeout=_COINGECKO_TIMEOUT,
+    )
+    resp.raise_for_status()
+    coins: List[Dict[str, Any]] = resp.json()
+
+    def _change_1h(coin: Dict[str, Any]) -> float:
+        val = coin.get("price_change_percentage_1h_in_currency")
+        if isinstance(val, list):
+            val = val[0] if val else 0
+        if val is None:
+            val = coin.get("price_change_percentage_1h", 0)
+        try:
+            return float(val or 0)
+        except (TypeError, ValueError):
+            return 0.0
+
+    ranked = sorted(coins, key=_change_1h, reverse=True)[:_TICKER_GAINERS_LIMIT]
+
+    out: List[Dict[str, Any]] = []
+    for rank, coin in enumerate(ranked, start=1):
+        out.append({
+            "rank": rank,
+            "symbol": (coin.get("symbol") or "?").upper(),
+            "price": float(coin.get("current_price", 0) or 0),
+            "change_30m": _change_1h(coin),
+        })
+    return out
+
+
+def _coingecko_ticker_data() -> Dict[str, Any]:
+    """Assemble the full ticker payload from CoinGecko (live).
+
+    Returns:
+        Dict matching the public /api/ticker schema.
+    """
+    prices = _coingecko_simple_prices()
+    gainers = _coingecko_top_gainers()
+    result: Dict[str, Any] = dict(prices)
+    result["top_gainers"] = gainers
+    return result
+
+
+def _mock_ticker_data() -> Dict[str, Any]:
+    """Branded fallback ticker payload (used without a key or on API failure).
+
+    Returns:
+        Dict matching the public /api/ticker schema with sample data so the
+        ticker always renders something meaningful.
+    """
+    return {
+        "btc": {"price": 64728.14, "change_24h": 0.76},
+        "eth": {"price": 1908.32, "change_24h": -0.27},
+        "sol": {"price": 73.44, "change_24h": 0.05},
+        "top_gainers": [
+            {"rank": 1, "symbol": "PEPE", "price": 0.0000142, "change_30m": 12.4},
+            {"rank": 2, "symbol": "BOME", "price": 0.0004210, "change_30m": 8.9},
+            {"rank": 3, "symbol": "WIF", "price": 2.8941, "change_30m": 6.3},
+        ],
+    }
+
+
+@app.route("/api/ticker")
+def api_ticker():
+    """Homepage market ticker data (BTC/ETH/SOL + top-3 gainers).
+
+    Uses live CoinGecko data when ``COINGECKO_API_KEY`` is configured;
+    otherwise (and on any API failure) returns branded mock data so the
+    ticker always displays. Refreshed by the frontend every 60 seconds.
+
+    Returns:
+        JSON ticker payload (see module docstring for the schema).
+    """
+    if not config.env("COINGECKO_API_KEY"):
+        log.info("Ticker: no COINGECKO_API_KEY configured — serving mock data")
+        return jsonify(_mock_ticker_data())
+
+    try:
+        return jsonify(_coingecko_ticker_data())
+    except Exception as exc:  # noqa: BLE001 — never break the homepage
+        log.warning("Ticker: CoinGecko fetch failed (%s) — serving mock data", exc)
+        return jsonify(_mock_ticker_data())
 
 
 @app.route("/api/waitlist", methods=["POST"])

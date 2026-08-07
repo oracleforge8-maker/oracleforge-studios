@@ -6,6 +6,7 @@
 :root {
     --purple: #2D1B69;
     --green: #00FF88;
+    --red: #FF4444;
     --dark: #0A0A0A;
     --silver: #C0C0C0;
     --white: #FFFFFF;
@@ -700,4 +701,87 @@ section { margin-bottom: 4rem; }
 
 .patreon-btn:active {
     transform: scale(0.98);
+}
+
+/* ============================================================
+   Market Ticker
+   ============================================================ */
+
+.market-ticker {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 0.4rem 0.8rem;
+    margin-bottom: 2rem;
+    box-shadow: 0 0 18px rgba(0, 255, 136, 0.06);
+    overflow: hidden;
+}
+
+.ticker-label {
+    flex: 0 0 auto;
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.6px;
+    color: var(--green);
+    white-space: nowrap;
+}
+
+.ticker-track {
+    flex: 1 1 auto;
+    display: flex;
+    align-items: center;
+    gap: 1.4rem;
+    overflow: hidden;
+    animation: tickerScroll 26s linear infinite;
+}
+
+/* Hover anywhere on the ticker pauses the scroll */
+.market-ticker:hover .ticker-track {
+    animation-play-state: paused;
+}
+
+@keyframes tickerScroll {
+    0%   { transform: translateX(0); }
+    100% { transform: translateX(-50%); }
+}
+
+.ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.82rem;
+    white-space: nowrap;
+    color: var(--silver);
+    flex: 0 0 auto;
+}
+
+.ticker-item .ticker-symbol { font-weight: 700; color: var(--white); }
+.ticker-item .ticker-price   { opacity: 0.8; }
+.ticker-item .ticker-medal   { font-size: 1.05rem; }
+
+.ticker-item::after {
+    content: "•";
+    color: var(--border);
+    opacity: 0.35;
+    margin-left: 0.1rem;
+}
+
+.ticker-change {
+    font-weight: 700;
+    padding: 0.1rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.78rem;
+    white-space: nowrap;
+}
+.ticker-change.up   { color: var(--green); background: rgba(0, 255, 136, 0.12); }
+.ticker-change.down { color: var(--red);   background: rgba(255, 68, 68, 0.12); }
+
+@media (max-width: 560px) {
+    .ticker-item { font-size: 0.72rem; }
+    .ticker-medal { font-size: 0.9rem; }
+    .ticker-track { animation-duration: 20s; }
 }

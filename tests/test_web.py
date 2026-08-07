@@ -51,6 +51,30 @@ def test_api_trends(client, db, sample_trends):
     assert len(data["trends"]) == 2
 
 
+def test_api_ticker(client):
+    """GET /api/ticker returns the ticker schema (prices + top-3 gainers).
+
+    No COINGECKO_API_KEY is set in the test env, so the endpoint serves the
+    branded mock data — keeping the test fast and network-free.
+    """
+    resp = client.get("/api/ticker")
+    assert resp.status_code == 200
+    data = resp.get_json()
+
+    for key in ("btc", "eth", "sol"):
+        assert key in data
+        assert isinstance(data[key]["price"], (int, float))
+        assert isinstance(data[key]["change_24h"], (int, float))
+
+    assert isinstance(data["top_gainers"], list)
+    assert len(data["top_gainers"]) == 3
+    for i, g in enumerate(data["top_gainers"], start=1):
+        assert g["rank"] == i
+        assert g["symbol"]
+        assert isinstance(g["price"], (int, float))
+        assert isinstance(g["change_30m"], (int, float))
+
+
 def test_api_waitlist_valid(client, db):
     """POST /api/waitlist with a valid email should succeed."""
     resp = client.post("/api/waitlist", data={"email": "anon@example.com"})
