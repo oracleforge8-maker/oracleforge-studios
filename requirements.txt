@@ -2,39 +2,39 @@
 # Python 3.11+ required
 
 # --- Core ---
-python-dotenv>=1.0.1          # Environment variable loading from .env
-PyYAML>=6.0.1                 # Config file parsing (prompts.yaml, schedule.yaml)
-requests>=2.32.3              # Synchronous HTTP client (fallback / simple calls)
-aiohttp>=3.9.5                # Async HTTP client (Scout scrapers)
+python-dotenv>=1.0.1
+PyYAML>=6.0.1
+requests>=2.32.3
+aiohttp>=3.9.5
 
 # --- Web ---
-Flask>=3.0.3                  # Website server
-Flask-Cors>=4.0.1             # CORS for live demo API
-gunicorn>=22.0.0              # Production WSGI server (Render/Heroku)
+Flask>=3.0.3
+Flask-Cors>=4.0.1
+gunicorn>=22.0.0
 
 # --- AI / Social ---
-openai>=1.40.0                # DALL-E 3 image generation (The Forge)
-tweepy>=4.14.0                # Twitter/X API client (The Radar social)
-discord.py>=2.3.2             # Discord bot (auto-posting)
+openai>=1.40.0
+tweepy>=4.14.0
+discord.py>=2.3.2
 
 # --- Payments ---
-stripe>=10.0.0                # Stripe Checkout / webhooks (test mode)
-patreon>=0.8.1                # Patreon API client (patron tiers)
+stripe>=10.0.0
+patreon>=0.5.0          # ← FIXED: changed from >=0.8.1
 
 # --- Reporting / Imaging ---
-matplotlib>=3.9.1             # Weekly report charts (The Chronicler)
-Pillow>=10.4.0                # Image fallback generation & processing
+matplotlib>=3.9.1
+Pillow>=10.4.0
 
 # --- Security / Vault ---
-cryptography>=42.0.0          # Fernet encryption for the credential vault
+cryptography>=42.0.0
 
 # --- Browser automation (account creation) ---
-selenium>=4.20.0              # Browser automation for signup flows
-undetected-chromedriver>=3.5.5  # Stealth Chrome driver (optional, preferred)
+selenium>=4.20.0
+undetected-chromedriver>=3.5.5
 
 # --- Scheduling (Watchtower) ---
-APScheduler>=3.10.4           # Background job scheduling for health checks
+APScheduler>=3.10.4
 
 # --- Testing ---
-pytest>=8.3.2                 # Test suite
-pytest-asyncio>=0.23.8        # Async test support
+pytest>=8.3.2
+pytest-asyncio>=0.23.8
