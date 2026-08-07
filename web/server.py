@@ -369,23 +369,26 @@ def _mock_quick_stats_data() -> Dict[str, Any]:
     }
 
 @app.route("/api/quick-stats")
-def api_quick_stats():
-    """Global crypto market quick stats (market cap, volume, dominance).
-    Uses live CoinGecko data when ``COINGECKO_API_KEY`` is configured;
-    otherwise (and on any API failure) returns branded mock data so the
-    stats always display. Refreshed by the frontend every 60 seconds.
-    Returns:
-        JSON: {"total_market_cap", "total_volume", "btc_dominance", "eth_dominance"}
-    """
-    if not config.env("COINGECKO_API_KEY"):
-        log.info("Quick stats: no COINGECKO_API_KEY configured — serving mock data")
-        return jsonify(_mock_quick_stats_data())
-
+def quick_stats():
+    import requests
     try:
-        return jsonify(_coingecko_global_data())
-    except Exception as exc:  # noqa: BLE001 — never break the homepage
-        log.warning("Quick stats: CoinGecko fetch failed (%s) — serving mock data", exc)
-        return jsonify(_mock_quick_stats_data())
+        url = "https://api.coingecko.com/api/v3/global"
+        response = requests.get(url, timeout=10)
+        data = response.json()
+        global_data = data.get('data', {})
+        return jsonify({
+            "total_market_cap": global_data.get('total_market_cap', {}).get('usd', 0),
+            "total_volume": global_data.get('total_volume', {}).get('usd', 0),
+            "btc_dominance": global_data.get('market_cap_percentage', {}).get('btc', 0),
+            "eth_dominance": global_data.get('market_cap_percentage', {}).get('eth', 0)
+        })
+    except Exception as e:
+        return jsonify({
+            "total_market_cap": 2140000000000,
+            "total_volume": 85300000000,
+            "btc_dominance": 52.5,
+            "eth_dominance": 18.2
+        })
 
 # ---------------------------------------------------------------------------
 # Breaking News ticker (CryptoPanic)

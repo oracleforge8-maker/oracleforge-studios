@@ -105,6 +105,13 @@
             return n.toFixed(1) + '%';
         }
 
+        function formatNumber(num) {
+            if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+            return num.toFixed(2);
+        }
+
         function updateStats(data) {
             // Update each stat card
             document.getElementById('totalMarketCap').textContent = formatCurrency(data.total_market_cap);
@@ -120,16 +127,19 @@
             }
         }
 
-        async function loadQuickStats() {
-            try {
-                const res = await fetch('/api/quick-stats', {cache: 'no-store'});
-                if (!res.ok) throw new Error('Quick stats API returned ' + res.status);
-                const data = await res.json();
-                updateStats(data);
-            } catch (err) {
-                console.warn('Quick stats fetch failed:', err);
-                // Keep showing last data or placeholders on error
-            }
+        function loadQuickStats() {
+            fetch('/api/quick-stats')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('totalMarketCap').textContent = '$' + formatNumber(data.total_market_cap);
+                    document.getElementById('totalVolume').textContent = '$' + formatNumber(data.total_volume);
+                    document.getElementById('btcDominance').textContent = data.btc_dominance.toFixed(1) + '%';
+                    document.getElementById('ethDominance').textContent = data.eth_dominance.toFixed(1) + '%';
+                    document.getElementById('statsTimestamp').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+                })
+                .catch(() => {
+                    // Keep existing values if API fails
+                });
         }
 
         // Load immediately, then refresh every 60 seconds
