@@ -52,19 +52,6 @@ def _db() -> Any:
     return get_db()
 
 
-def _affiliate_links() -> Dict[str, str]:
-    """Return affiliate link config for templates.
-
-    Returns:
-        Dict of affiliate URLs.
-    """
-    return {
-        "affiliate_coinbase": config.env("AFFILIATE_COINBASE", "#"),
-        "affiliate_binance": config.env("AFFILIATE_BINANCE", "#"),
-        "affiliate_namecheap": config.env("AFFILIATE_NAMECHEAP", "#"),
-    }
-
-
 # ---------------------------------------------------------------------------
 # Page routes
 # ---------------------------------------------------------------------------
@@ -72,7 +59,7 @@ def _affiliate_links() -> Dict[str, str]:
 @app.route("/")
 def home():
     """Render the home page."""
-    return render_template("home.html", **_affiliate_links())
+    return render_template("home.html")
 
 
 @app.route("/tools")

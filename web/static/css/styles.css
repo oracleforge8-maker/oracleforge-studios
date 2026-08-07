@@ -677,3 +677,27 @@ section { margin-bottom: 4rem; }
 
     .hero-cta { flex-direction: column; align-items: center; }
 }
+
+/* ---------- Patreon Button ---------- */
+
+/* Patreon Button */
+.patreon-btn {
+    display: inline-block;
+    background: #00FF88;
+    color: #0A0A0A;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: bold;
+    text-decoration: none;
+    transition: background 0.3s ease, transform 0.2s ease;
+}
+
+.patreon-btn:hover {
+    background: #00DD77;
+    transform: scale(1.02);
+    color: #0A0A0A;
+}
+
+.patreon-btn:active {
+    transform: scale(0.98);
+}
