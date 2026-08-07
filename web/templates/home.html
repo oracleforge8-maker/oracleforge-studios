@@ -4,52 +4,10 @@
 
 {% block content %}
 
-<!-- ================= Breaking News ================= -->
-<section class="breaking-news-section">
-    <div class="container">
-        <div class="section-head">
-            <h2>📰 Breaking News</h2>
-            <p class="section-sub">Latest crypto headlines. Updates every 5 minutes.</p>
-        </div>
-        <div class="news-list" id="newsList">
-            <div class="news-loading">Loading latest news...</div>
-        </div>
-    </div>
-</section>
-
 <!-- ================= Market Ticker ================= -->
 <section class="market-ticker" id="marketTicker">
     <span class="ticker-label">MARKET</span>
     <div class="ticker-track" id="tickerTrack"></div>
-</section>
-
-<!-- ================= Quick Stats ================= -->
-<section class="quick-stats-section">
-    <div class="container">
-        <div class="section-head">
-            <h2>📊 Quick Stats</h2>
-            <p class="section-sub">Global crypto market metrics. Updates every 60 seconds.</p>
-        </div>
-        <div class="stats-grid" id="quickStatsGrid">
-            <div class="stat-card">
-                <div class="stat-label">Total Market Cap</div>
-                <div class="stat-value" id="totalMarketCap">$0.00</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">24h Trading Volume</div>
-                <div class="stat-value" id="totalVolume">$0.00</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">BTC Dominance</div>
-                <div class="stat-value" id="btcDominance">0.0%</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-label">ETH Dominance</div>
-                <div class="stat-value" id="ethDominance">0.0%</div>
-            </div>
-        </div>
-        <div class="stats-updated" id="statsUpdated"></div>
-    </div>
 </section>
 
 <!-- ================= Hero ================= -->
@@ -63,6 +21,118 @@
         </div>
     </div>
 </section>
+
+<!-- ================= Main Content Grid ================= -->
+<div class="main-content-grid">
+    <div class="main-column">
+        <!-- ================= Quick Stats ================= -->
+        <section class="quick-stats-section">
+            <div class="container">
+                <div class="section-head">
+                    <h2>📊 Quick Stats</h2>
+                    <p class="section-sub">Global crypto market metrics. Updates every 60 seconds.</p>
+                </div>
+                <div class="stats-grid" id="quickStatsGrid">
+                    <div class="stat-card">
+                        <div class="stat-label">Total Market Cap</div>
+                        <div class="stat-value" id="totalMarketCap">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">24h Trading Volume</div>
+                        <div class="stat-value" id="totalVolume">$0.00</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">BTC Dominance</div>
+                        <div class="stat-value" id="btcDominance">0.0%</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-label">ETH Dominance</div>
+                        <div class="stat-value" id="ethDominance">0.0%</div>
+                    </div>
+                </div>
+                <div class="stats-updated" id="statsUpdated"></div>
+            </div>
+        </section>
+
+        <!-- ================= Top 10 Gainers ================= -->
+        <section class="top-gainers-section">
+            <div class="container">
+                <div class="section-head">
+                    <h2>🔥 Top 10 Gainers (30m)</h2>
+                    <p class="section-sub">Coins with the highest 30-minute price momentum, ranked by OracleForge's real-time scan. Updates every 60 seconds.</p>
+                </div>
+                <div class="gainers-table-wrap">
+                    <table class="gainers-table" id="topGainersTable">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Coin</th>
+                                <th class="num-col">Price (USD)</th>
+                                <th class="num-col">30m Change</th>
+                                <th class="num-col">24h Change</th>
+                            </tr>
+                        </thead>
+                        <tbody id="topGainersBody">
+                            <tr><td colspan="5" class="gainers-loading">Loading market data…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= 3h Chart with Moving Averages ================= -->
+        <section class="chart-section">
+            <div class="container">
+                <div class="section-head">
+                    <h2>📈 3h Chart with 3h & 10h Moving Averages</h2>
+                    <p class="section-sub">Interactive chart showing price action, moving averages, and trading signals for the top trending Pump.fun coin. Auto-updates every 60 seconds.</p>
+                </div>
+                <div class="chart-container">
+                    <div id="chartLoading" class="chart-loading">Loading chart data for top Pump.fun coin…</div>
+                    <div id="chartContainer" class="chart-area"></div>
+                    <div id="chartInfo" class="chart-info">
+                        <span id="currentCoin">Loading...</span>
+                        <button id="chartRefreshBtn" class="btn btn-secondary">🔄 Refresh</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ================= Pump.fun Trending ================= -->
+        <section class="pump-trending-section">
+            <div class="container">
+                <div class="section-head">
+                    <h2>📈 Pump.fun Trending (1h)</h2>
+                    <p class="section-sub">Fresh meme coins erupting on Pump.fun right now. Momentum is scored 0-100 from on-chain + social velocity. Tokens with momentum over 70 are <span class="gradient-text">highlighted</span>. Refreshes every 60 seconds.</p>
+                </div>
+                <div class="pump-grid" id="pumpTrendingGrid">
+                    <div class="pump-info-card" id="pumpInfoCard">
+                        <div class="pump-loading">Scanning the blockchain for fresh degens… 🔍</div>
+                    </div>
+                    <div class="pump-chart-container">
+                        <div id="pumpChart" class="pump-chart"></div>
+                    </div>
+                </div>
+                <div class="pump-updated" id="pumpUpdated"></div>
+            </div>
+        </section>
+    </div>
+
+    <div class="sidebar-column">
+        <!-- ================= Breaking News ================= -->
+        <section class="breaking-news-section">
+            <div class="container">
+                <div class="section-head">
+                    <h2>📰 Breaking News</h2>
+                    <p class="section-sub">Latest crypto headlines. Updates every 5 minutes.</p>
+                </div>
+                <div class="news-list" id="newsList">
+                    <div class="news-loading">Loading latest news...</div>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
 
 <!-- ================= Trust Bar ================= -->
 <section>
@@ -85,69 +155,6 @@
                 <p>You see the results on the homepage: Quick Stats (market cap, volume, dominance), Top 10 Gainers (30m) with medals for the top 3, Pump.fun Trending with momentum scores, Breaking News auto-scrolling headlines, and Live Charts with moving averages. All data updates automatically every 60 seconds.</p>
             </div>
         </div>
-    </div>
-</section>
-
-<!-- ================= Top 10 Gainers ================= -->
-<section class="top-gainers-section">
-    <div class="container">
-        <div class="section-head">
-            <h2>🔥 Top 10 Gainers (30m)</h2>
-            <p class="section-sub">Coins with the highest 30-minute price momentum, ranked by OracleForge's real-time scan. Updates every 60 seconds.</p>
-        </div>
-        <div class="gainers-table-wrap">
-            <table class="gainers-table" id="topGainersTable">
-                <thead>
-                    <tr>
-                        <th>#</th>
-                        <th>Coin</th>
-                        <th class="num-col">Price (USD)</th>
-                        <th class="num-col">30m Change</th>
-                        <th class="num-col">24h Change</th>
-                    </tr>
-                </thead>
-                <tbody id="topGainersBody">
-                    <tr><td colspan="5" class="gainers-loading">Loading market data…</td></tr>
-                </tbody>
-            </table>
-        </div>
-    </div>
-</section>
-
-<!-- ================= 3h Chart with Moving Averages ================= -->
-<section class="chart-section">
-    <div class="container">
-        <div class="section-head">
-            <h2>📈 3h Chart with 3h & 10h Moving Averages</h2>
-            <p class="section-sub">Interactive chart showing price action, moving averages, and trading signals for the top trending Pump.fun coin. Auto-updates every 60 seconds.</p>
-        </div>
-        <div class="chart-container">
-            <div id="chartLoading" class="chart-loading">Loading chart data for top Pump.fun coin…</div>
-            <div id="chartContainer" class="chart-area"></div>
-            <div id="chartInfo" class="chart-info">
-                <span id="currentCoin">Loading...</span>
-                <button id="chartRefreshBtn" class="btn btn-secondary">🔄 Refresh</button>
-            </div>
-        </div>
-    </div>
-</section>
-
-<!-- ================= Pump.fun Trending ================= -->
-<section class="pump-trending-section">
-    <div class="container">
-        <div class="section-head">
-            <h2>📈 Pump.fun Trending (1h)</h2>
-            <p class="section-sub">Fresh meme coins erupting on Pump.fun right now. Momentum is scored 0-100 from on-chain + social velocity. Tokens with momentum over 70 are <span class="gradient-text">highlighted</span>. Refreshes every 60 seconds.</p>
-        </div>
-        <div class="pump-grid" id="pumpTrendingGrid">
-            <div class="pump-info-card" id="pumpInfoCard">
-                <div class="pump-loading">Scanning the blockchain for fresh degens… 🔍</div>
-            </div>
-            <div class="pump-chart-container">
-                <div id="pumpChart" class="pump-chart"></div>
-            </div>
-        </div>
-        <div class="pump-updated" id="pumpUpdated"></div>
     </div>
 </section>
 

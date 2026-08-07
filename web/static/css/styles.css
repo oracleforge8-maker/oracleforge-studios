@@ -704,7 +704,49 @@ section { margin-bottom: 4rem; }
 }
 
 /* ============================================================
-   Breaking News Static List
+   Main Content Grid Layout
+   ============================================================ */
+
+.main-content-grid {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 2rem;
+    margin-bottom: 4rem;
+}
+
+.main-column {
+    width: 100%;
+}
+
+.sidebar-column {
+    width: 100%;
+}
+
+/* Desktop two-column layout */
+@media (min-width: 992px) {
+    .main-content-grid {
+        grid-template-columns: 70% 30%;
+        gap: 2rem;
+    }
+
+    .main-column {
+        width: 100%;
+    }
+
+    .sidebar-column {
+        width: 100%;
+        position: sticky;
+        top: 2rem;
+        align-self: start;
+    }
+
+    .breaking-news-section {
+        margin-bottom: 0;
+    }
+}
+
+/* ============================================================
+   Breaking News Sidebar Style
    ============================================================ */
 
 .breaking-news-section {
@@ -714,8 +756,81 @@ section { margin-bottom: 4rem; }
 .news-list {
     display: grid;
     gap: 1rem;
-    max-width: 800px;
+    max-width: 100%;
     margin: 0 auto;
+}
+
+.news-article {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1.2rem;
+    transition: transform 0.2s, box-shadow 0.2s;
+    cursor: pointer;
+}
+
+.news-article:hover {
+    transform: translateX(4px);
+    box-shadow: var(--glow-purple);
+}
+
+.news-title {
+    display: block;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--white);
+    margin-bottom: 0.4rem;
+    line-height: 1.4;
+}
+
+.news-source {
+    display: inline-block;
+    font-size: 0.8rem;
+    font-weight: 700;
+    color: var(--green);
+    margin-bottom: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.news-readmore {
+    display: inline-block;
+    font-size: 0.85rem;
+    color: var(--silver);
+    text-decoration: none;
+    font-weight: 600;
+    transition: color 0.2s;
+}
+
+.news-readmore:hover {
+    color: var(--green);
+    text-decoration: underline;
+}
+
+.news-loading {
+    text-align: center;
+    padding: 1.5rem;
+    color: var(--silver);
+    font-size: 0.9rem;
+}
+
+/* Compact news article style for sidebar */
+.sidebar-column .news-article {
+    padding: 1rem;
+}
+
+.sidebar-column .news-title {
+    font-size: 0.95rem;
+    margin-bottom: 0.3rem;
+}
+
+.sidebar-column .news-source {
+    font-size: 0.75rem;
+    margin-bottom: 0.5rem;
+}
+
+.sidebar-column .news-readmore {
+    font-size: 0.8rem;
 }
 
 .news-article {
