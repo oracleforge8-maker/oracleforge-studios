@@ -785,3 +785,150 @@ section { margin-bottom: 4rem; }
     .ticker-medal { font-size: 0.9rem; }
     .ticker-track { animation-duration: 20s; }
 }
+
+/* ============================================================
+   Top 10 Gainers Table
+   ============================================================ */
+
+.top-gainers-section {
+    margin-bottom: 4rem;
+}
+
+.top-gainers-section .section-head h2 {
+    font-size: clamp(1.4rem, 2.8vw, 2rem);
+}
+
+.section-sub {
+    color: var(--silver);
+    opacity: 0.8;
+    font-size: 0.9rem;
+    max-width: 720px;
+    margin: 0.5rem auto 0;
+}
+
+.gainers-table-wrap {
+    max-width: 960px;
+    margin: 0 auto;
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--card-bg);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.05);
+}
+
+.gainers-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 640px;
+}
+
+.gainers-table th,
+.gainers-table td {
+    padding: 0.8rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+
+.gainers-table thead th {
+    color: var(--white);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-size: 0.75rem;
+    padding: 0.7rem 1rem;
+}
+
+.gainers-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.gainers-table tbody tr:hover {
+    background: rgba(0, 255, 136, 0.04);
+}
+
+.num-col {
+    text-align: right;
+}
+
+/* Rank / medal column */
+.gainers-rank {
+    font-weight: 800;
+    color: var(--white);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+}
+
+.gainers-medal {
+    font-size: 1.05rem;
+    line-height: 1;
+}
+
+/* Medal colours */
+.gainers-medal.gold   { color: #FFD700; text-shadow: 0 0 6px rgba(255, 215, 0, 0.5); }
+.gainers-medal.silver { color: #C0C0C0; text-shadow: 0 0 6px rgba(192, 192, 192, 0.5); }
+.gainers-medal.bronze { color: #CD7F32; text-shadow: 0 0 6px rgba(205, 127, 50, 0.5); }
+
+/* Coin symbol column */
+.gainers-symbol {
+    font-weight: 800;
+    color: var(--white);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+/* Price column */
+.gainers-price {
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', monospace;
+    color: var(--green);
+}
+
+/* Price change cells — green (up) / red (down) */
+.change-up {
+    color: var(--green);
+    font-weight: 700;
+    background: rgba(0, 255, 136, 0.10);
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.change-down {
+    color: var(--red);
+    font-weight: 700;
+    background: rgba(255, 68, 68, 0.10);
+    padding: 0.2rem 0.55rem;
+    border-radius: 6px;
+    display: inline-block;
+}
+
+.change-neutral {
+    color: var(--silver);
+    font-weight: 700;
+}
+
+.gainers-loading {
+    text-align: center;
+    padding: 2.5rem 1rem;
+    color: var(--silver);
+    opacity: 0.7;
+    font-style: italic;
+}
+
+/* Last-updated timestamp */
+.gainers-updated {
+    text-align: right;
+    font-size: 0.75rem;
+    color: var(--silver);
+    opacity: 0.6;
+    padding: 0.5rem 1rem;
+    border-top: 1px solid var(--border);
+}
+
+/* Responsive */
+@media (max-width: 560px) {
+    .gainers-table { min-width: 100%; }
+    .gainers-table th,
+    .gainers-table td { padding: 0.6rem 0.6rem; font-size: 0.8rem; }
+}

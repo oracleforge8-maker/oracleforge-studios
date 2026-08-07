@@ -161,6 +161,9 @@ _TICKER_COINS = {
 #: Number of top gainers surfaced by the ticker
 _TICKER_GAINERS_LIMIT = 3
 
+#: Number of top gainers surfaced by the dedicated /api/top-gainers table
+_GAINERS_LIMIT = 10
+
 #: Per-request hard timeout (seconds) so a slow CG can never stall the page
 _COINGECKO_TIMEOUT = 10
 
@@ -319,6 +322,154 @@ def api_ticker():
     except Exception as exc:  # noqa: BLE001 — never break the homepage
         log.warning("Ticker: CoinGecko fetch failed (%s) — serving mock data", exc)
         return jsonify(_mock_ticker_data())
+
+
+# ---------------------------------------------------------------------------
+# Top 10 Gainers table (CoinGecko /coins/markets)
+# ---------------------------------------------------------------------------
+# Public schema (returned by /api/top-gainers): a JSON array of 10 coins:
+#     [
+#         {"rank": 1, "symbol": "PEPE", "price": 0.0000142,
+#          "change_30m": 14.5, "change_24h": 3.2},
+#         ...
+#     ]
+#
+# CoinGecko's public /coins/markets endpoint does not expose a 30-minute
+# price change, so we rank by the finest available momentum
+# (``price_change_percentage_1h_in_currency``, 1h) — the same proxy used by
+# the ticker — and surface it under ``change_30m``. The 24h change is also
+# requested and returned as ``change_24h``. The mock fallback supplies
+# branded sample rows so the table always renders. Refreshed by the frontend
+# every 60 seconds.
+
+
+def _change_pct(coin: Dict[str, Any], field: str) -> float:
+    """Extract a percentage figure from a CoinGecko coin dict.
+
+    CoinGecko returns ``price_change_percentage_<range>_in_currency`` as a
+    single-element list (or a bare float); this helper normalises both forms.
+
+    Args:
+        coin: A single /coins/markets response object.
+        field: The CoinGecko field name, e.g.
+            ``price_change_percentage_1h_in_currency``.
+
+    Returns:
+        The percentage as a float (0.0 on any parse failure).
+    """
+    val = coin.get(field)
+    if isinstance(val, list):
+        val = val[0] if val else 0
+    try:
+        return float(val or 0)
+    except (TypeError, ValueError):
+        return 0.0
+
+
+def _coingecko_top_gainers_table(count: int = _GAINERS_LIMIT) -> List[Dict[str, Any]]:
+    """Fetch the top gainers ranked by the finest available momentum (1h).
+
+    Queries ``/coins/markets`` (sorted client-side by
+    ``price_change_percentage_1h_in_currency`` descending, per the data
+    source spec) and returns a compact payload including both the 30m
+    momentum (1h proxy) and the 24h change.
+
+    Args:
+        count: How many ranks to return (default 10).
+
+    Returns:
+        List of dicts: {"rank", "symbol", "price", "change_30m", "change_24h"}.
+    """
+    resp = requests.get(
+        f"{COINGECKO_BASE}/coins/markets",
+        params={
+            "vs_currency": "usd",
+            "order": "market_cap_desc",
+            "per_page": 100,
+            "page": 1,
+            "price_change_percentage": "1h,24h",
+        },
+        headers=_coingecko_headers(),
+        timeout=_COINGECKO_TIMEOUT,
+    )
+    resp.raise_for_status()
+    coins: List[Dict[str, Any]] = resp.json()
+
+    ranked = sorted(
+        coins,
+        key=lambda c: _change_pct(c, "price_change_percentage_1h_in_currency"),
+        reverse=True,
+    )[:count]
+
+    out: List[Dict[str, Any]] = []
+    for rank, coin in enumerate(ranked, start=1):
+        out.append({
+            "rank": rank,
+            "symbol": (coin.get("symbol") or "?").upper(),
+            "price": float(coin.get("current_price", 0) or 0),
+            "change_30m": _change_pct(coin, "price_change_percentage_1h_in_currency"),
+            "change_24h": _change_pct(coin, "price_change_percentage_24h_in_currency"),
+        })
+    return out
+
+
+def _mock_gainers_data(count: int = _GAINERS_LIMIT) -> List[Dict[str, Any]]:
+    """Branded fallback for the top-gainers table (used without a key or on API failure).
+
+    Returns sample rows (with both 30m and 24h changes) so the table always
+    renders something meaningful and visually consistent with the live schema.
+
+    Args:
+        count: How many mock rows to return.
+
+    Returns:
+        List of dicts: {"rank", "symbol", "price", "change_30m", "change_24h"}.
+    """
+    sample = [
+        {"symbol": "PEPE", "price": 0.0000142, "change_30m": 14.5, "change_24h": 3.2},
+        {"symbol": "BOME", "price": 0.0004210, "change_30m": 8.9, "change_24h": 1.8},
+        {"symbol": "WIF", "price": 2.8941, "change_30m": 6.3, "change_24h": -2.1},
+        {"symbol": "DOGE", "price": 0.0734, "change_30m": 5.7, "change_24h": 4.5},
+        {"symbol": "SHIB", "price": 0.0000131, "change_30m": 4.9, "change_24h": 2.3},
+        {"symbol": "FLOKI", "price": 0.0001872, "change_30m": 4.2, "change_24h": 1.1},
+        {"symbol": "INJ", "price": 14.27, "change_30m": 3.8, "change_24h": -1.5},
+        {"symbol": "OP", "price": 1.99, "change_30m": 3.4, "change_24h": 5.0},
+        {"symbol": "PYTH", "price": 0.312, "change_30m": 3.1, "change_24h": 2.8},
+        {"symbol": "ARB", "price": 3.47, "change_30m": 2.9, "change_24h": 6.7},
+    ]
+    out: List[Dict[str, Any]] = []
+    for rank, coin in enumerate(sample[:count], start=1):
+        out.append({
+            "rank": rank,
+            "symbol": coin["symbol"],
+            "price": coin["price"],
+            "change_30m": coin["change_30m"],
+            "change_24h": coin["change_24h"],
+        })
+    return out
+
+
+@app.route("/api/top-gainers")
+def api_top_gainers():
+    """Top 10 coins by 30-minute price momentum.
+
+    Uses live CoinGecko data when ``COINGECKO_API_KEY`` is configured;
+    otherwise (and on any API failure) returns branded mock data so the
+    table always displays. Refreshed by the frontend every 60 seconds.
+
+    Returns:
+        JSON: a 10-element array of
+        {"rank", "symbol", "price", "change_30m", "change_24h"}.
+    """
+    if not config.env("COINGECKO_API_KEY"):
+        log.info("Top gainers: no COINGECKO_API_KEY configured — serving mock data")
+        return jsonify(_mock_gainers_data())
+
+    try:
+        return jsonify(_coingecko_top_gainers_table())
+    except Exception as exc:  # noqa: BLE001 — never break the homepage
+        log.warning("Top gainers: CoinGecko fetch failed (%s) — serving mock data", exc)
+        return jsonify(_mock_gainers_data())
 
 
 @app.route("/api/waitlist", methods=["POST"])

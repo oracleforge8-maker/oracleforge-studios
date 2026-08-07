@@ -75,6 +75,26 @@ def test_api_ticker(client):
         assert isinstance(g["change_30m"], (int, float))
 
 
+def test_api_top_gainers(client):
+    """GET /api/top-gainers returns the 10-coin gainers schema.
+
+    No COINGECKO_API_KEY is set in the test env, so the endpoint serves the
+    branded mock data — keeping the test fast and network-free.
+    """
+    resp = client.get("/api/top-gainers")
+    assert resp.status_code == 200
+    data = resp.get_json()
+
+    assert isinstance(data, list)
+    assert len(data) == 10
+    for i, g in enumerate(data, start=1):
+        assert g["rank"] == i
+        assert g["symbol"]
+        assert isinstance(g["price"], (int, float))
+        assert isinstance(g["change_30m"], (int, float))
+        assert isinstance(g["change_24h"], (int, float))
+
+
 def test_api_waitlist_valid(client, db):
     """POST /api/waitlist with a valid email should succeed."""
     resp = client.post("/api/waitlist", data={"email": "anon@example.com"})
