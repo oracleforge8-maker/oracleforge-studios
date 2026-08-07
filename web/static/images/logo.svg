@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="100" height="100">
+  <defs>
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="2" result="blur"/>
+      <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+    </filter>
+    <linearGradient id="subtleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ffffff" stop-opacity="1"/>
+      <stop offset="100%" stop-color="#f0f0f0" stop-opacity="1"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Geometric Anvil/Hammer Shape -->
+  <g filter="url(#glow)" fill="url(#subtleGradient)">
+    <!-- Base/Anvil Body - Geometric shape -->
+    <path d="M20,70 L80,70 L75,30 L25,30 Z"/>
+
+    <!-- Hammer Head - Abstract geometric shape -->
+    <path d="M35,25 L65,25 L60,15 L40,15 Z"/>
+
+    <!-- Handle/Connection - Minimal geometric lines -->
+    <rect x="45" y="30" width="10" height="15" rx="1"/>
+
+    <!-- Subtle details for tech-forward look -->
+    <circle cx="30" cy="20" r="2" fill="#ffffff"/>
+    <circle cx="70" cy="20" r="2" fill="#ffffff"/>
+  </g>
+</svg>
