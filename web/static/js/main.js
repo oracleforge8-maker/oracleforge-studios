@@ -71,82 +71,37 @@
     const statsGrid = document.getElementById('quickStatsGrid');
     const statsUpdated = document.getElementById('statsUpdated');
 
-    if (statsGrid) {
-        const POLL_MS = 60000; // 60 seconds
+// Quick Stats — always define the function
+const POLL_MS = 60000;
 
-        function formatCurrency(value) {
-            if (value === null || value === undefined || isNaN(Number(value))) return '$0.00';
-            const n = Number(value);
-            if (!n) return '$0.00';
+function formatNumber(num) {
+    if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
+    if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
+    if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
+    return num.toFixed(2);
+}
 
-            // Format with commas and 2 decimal places for large numbers
-            const opts = {
-                style: 'currency',
-                currency: 'USD',
-                minimumFractionDigits: 2,
-                maximumFractionDigits: 2
-            };
+function loadQuickStats() {
+    // Only run if the elements exist on this page
+    if (!document.getElementById('totalMarketCap')) return;
+    
+    fetch('/api/quick-stats')
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('totalMarketCap').textContent = '$' + formatNumber(data.total_market_cap);
+            document.getElementById('totalVolume').textContent = '$' + formatNumber(data.total_volume);
+            document.getElementById('btcDominance').textContent = data.btc_dominance.toFixed(1) + '%';
+            document.getElementById('ethDominance').textContent = data.eth_dominance.toFixed(1) + '%';
+            document.getElementById('statsTimestamp').textContent = 'Updated: ' + new Date().toLocaleTimeString();
+        })
+        .catch(() => {
+            // Keep existing values if API fails
+        });
+}
 
-            // For very large numbers (billions+), use compact notation
-            if (Math.abs(n) >= 1e12) {
-                opts.notation = 'compact';
-                opts.maximumFractionDigits = 1;
-            } else if (Math.abs(n) >= 1e9) {
-                opts.notation = 'compact';
-                opts.maximumFractionDigits = 2;
-            }
-
-            return n.toLocaleString('en-US', opts);
-        }
-
-        function formatPercentage(value) {
-            if (value === null || value === undefined || isNaN(Number(value))) return '0.0%';
-            const n = Number(value);
-            return n.toFixed(1) + '%';
-        }
-
-        function formatNumber(num) {
-            if (num >= 1e12) return (num / 1e12).toFixed(2) + 'T';
-            if (num >= 1e9) return (num / 1e9).toFixed(2) + 'B';
-            if (num >= 1e6) return (num / 1e6).toFixed(2) + 'M';
-            return num.toFixed(2);
-        }
-
-        function updateStats(data) {
-            // Update each stat card
-            document.getElementById('totalMarketCap').textContent = formatCurrency(data.total_market_cap);
-            document.getElementById('totalVolume').textContent = formatCurrency(data.total_volume);
-            document.getElementById('btcDominance').textContent = formatPercentage(data.btc_dominance);
-            document.getElementById('ethDominance').textContent = formatPercentage(data.eth_dominance);
-
-            // Update timestamp
-            if (statsUpdated) {
-                statsUpdated.textContent = 'Updated ' +
-                    new Date().toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'}) +
-                    ' · auto-refreshes every 60s';
-            }
-        }
-
-        function loadQuickStats() {
-            fetch('/api/quick-stats')
-                .then(response => response.json())
-                .then(data => {
-                    document.getElementById('totalMarketCap').textContent = '$' + formatNumber(data.total_market_cap);
-                    document.getElementById('totalVolume').textContent = '$' + formatNumber(data.total_volume);
-                    document.getElementById('btcDominance').textContent = data.btc_dominance.toFixed(1) + '%';
-                    document.getElementById('ethDominance').textContent = data.eth_dominance.toFixed(1) + '%';
-                    document.getElementById('statsTimestamp').textContent = 'Updated: ' + new Date().toLocaleTimeString();
-                })
-                .catch(() => {
-                    // Keep existing values if API fails
-                });
-        }
-
-        // Load immediately, then refresh every 60 seconds
-        loadQuickStats();
-        setInterval(loadQuickStats, POLL_MS);
-    }
-
+// Run immediately and then every 60 seconds
+loadQuickStats();
+setInterval(loadQuickStats, POLL_MS);
     // ---------- Breaking News static list ----------
     // Homepage static list of latest crypto headlines (5 most recent).
     // Polls /api/news every 5 minutes.
