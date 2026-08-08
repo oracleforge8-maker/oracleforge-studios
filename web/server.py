@@ -285,28 +285,6 @@ def _mock_chart_data(coin_id: str) -> Dict[str, Any]:
         "signals": signals
     }
 
-@app.route("/api/chart/<coin>")
-def api_chart(coin):
-    """Chart data endpoint for a specific coin.
-
-    Query params:
-        timeframe: Timeframe for the chart (default "1m"). Supported: "1m", "5m", "15m", "1h", "4h", "1d".
-
-    Returns:
-        JSON: {"coin", "price_data", "ma_1m", "ma_5m", "signals"}
-    """
-    timeframe = request.args.get("timeframe", "1m")
-
-    if not config.env("COINGECKO_API_KEY"):
-        log.info("Chart: no COINGECKO_API_KEY configured — serving mock data")
-        return jsonify(_mock_chart_data(coin))
-
-    try:
-        return jsonify(_coingecko_chart_data(coin, timeframe))
-    except Exception as exc:  # noqa: BLE001 — never break the homepage
-        log.warning("Chart: CoinGecko fetch failed (%s) — serving mock data", exc)
-        return jsonify(_mock_chart_data(coin))
-
 # ---------------------------------------------------------------------------
 # Quick Stats (CoinGecko /global)
 # ---------------------------------------------------------------------------
@@ -368,7 +346,7 @@ def _mock_quick_stats_data() -> Dict[str, Any]:
         "eth_dominance": 18.2
     }
 
-@app.route("/api/quick-stats")
+@app.route('/api/quick-stats')
 def quick_stats():
     import requests
     try:
@@ -389,7 +367,6 @@ def quick_stats():
             "btc_dominance": 52.5,
             "eth_dominance": 18.2
         })
-
 # ---------------------------------------------------------------------------
 # Breaking News ticker (CryptoPanic)
 # ---------------------------------------------------------------------------
@@ -723,7 +700,6 @@ def ticker():
             "sol": {"price": 143, "change_24h": 0.8},
             "top_gainers": []
         })
-
 
 # ---------------------------------------------------------------------------
 # Top 10 Gainers table (CoinGecko /coins/markets)
