@@ -266,12 +266,10 @@
             if (price === null || price === undefined || isNaN(Number(price))) return '—';
             const n = Number(price);
             if (!n) return '$0.00';
-            const opts = Math.abs(n) >= 100
-                ? {minimumFractionDigits: 2, maximumFractionDigits: 2}
-                : Math.abs(n) >= 1
-                ? {minimumFractionDigits: 2, maximumFractionDigits: 4}
-                : {minimumFractionDigits: 4, maximumFractionDigits: 8};
-            return '$' + n.toLocaleString('en-US', opts);
+            if (n >= 100) return '$' + n.toFixed(2);
+            if (n >= 1) return '$' + n.toFixed(4);
+            if (n >= 0.01) return '$' + n.toFixed(6);
+            return '$' + n.toFixed(8);
         }
 
         function fmtChange(c) {
