@@ -569,7 +569,7 @@
          setInterval(loadGainers, POLL_MS);
     }
 
-    // ---------- 3h Chart with Moving Averages ----------
+    // ---------- 1-min Chart with Moving Averages ----------
     // Homepage interactive chart showing price action, moving averages, and trading signals.
     // Auto-loads the top trending Pump.fun coin and updates when the top coin changes.
     const chartContainer = document.getElementById('chartContainer');
