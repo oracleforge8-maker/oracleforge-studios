@@ -677,17 +677,7 @@
             if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
             if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
             return '$' + n.toFixed(0);
-        }
-        function updateCurrentCoinInfo(token) {
-            if (currentCoinElement) {
-                currentCoinElement.textContent = token ?
-                    `📊 ${token.symbol.toUpperCase()} - $${token.price.toLocaleString('en-US', {
-                        minimumFractionDigits: 4,
-                        maximumFractionDigits: 8
-                    })} | Momentum: ${token.momentum.toFixed(1)}` :
-                    'No data available';
-            }
-        }
+                }
 
         function updateCoinInfoOverlay(token) {
             const overlay = document.getElementById('coinInfoOverlay');
