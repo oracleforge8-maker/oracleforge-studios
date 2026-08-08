@@ -622,60 +622,6 @@
             }
         }
 
-        function updateCoinInfoOverlay(token) {
-            const overlay = document.getElementById('coinInfoOverlay');
-            if (!overlay) return;
-
-            if (token) {
-                overlay.innerHTML = `
-                    <h4>🪙 ${token.symbol.toUpperCase()}</h4>
-                    <div class="coin-price">$${token.price.toLocaleString('en-US', {
-                        minimumFractionDigits: 4,
-                        maximumFractionDigits: 8
-                    })}</div>
-                    <div class="coin-stats">
-                        <div>
-                            <div class="stat-label">Momentum</div>
-                            <div class="stat-value">${token.momentum.toFixed(1)}</div>
-                        </div>
-                        <div>
-                            <div class="stat-label">Market Cap</div>
-                            <div class="stat-value">$${formatMarketCap(token.marketCapUsd)}</div>
-                        </div>
-                        <div>
-                            <div class="stat-label">Volume</div>
-                            <div class="stat-value">$${formatVolume(token.volumeUsd)}</div>
-                        </div>
-                        <div>
-                            <div class="stat-label">Launched</div>
-                            <div class="stat-value">${token.launched}</div>
-                        </div>
-                    </div>
-                `;
-                overlay.style.display = 'block';
-            } else {
-                overlay.style.display = 'none';
-            }
-        }
-
-        function formatMarketCap(mc) {
-            if (mc === null || mc === undefined || isNaN(Number(mc))) return '—';
-            const n = Number(mc);
-            if (!n) return '$0';
-            if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
-            if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
-            if (n >= 1e3) return '$' + (n / 1e3).toFixed(2) + 'K';
-            return '$' + n.toFixed(0);
-        }
-
-        function formatVolume(vol) {
-            if (vol === null || vol === undefined || isNaN(Number(vol))) return '—';
-            const n = Number(vol);
-            if (!n) return '$0';
-            if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
-            if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
-            return '$' + n.toFixed(0);
-                }
 
         function updateCoinInfoOverlay(token) {
             const overlay = document.getElementById('coinInfoOverlay');
