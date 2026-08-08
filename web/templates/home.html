@@ -5,12 +5,6 @@
 
 {% block content %}
 
-<!-- ================= Market Ticker ================= -->
-<section class="market-ticker" id="marketTicker">
-    <span class="ticker-label">MARKET</span>
-    <div class="ticker-track" id="tickerTrack"></div>
-</section>
-
 <!-- ================= Hero ================= -->
 <section class="hero">
     <div class="container">
@@ -19,6 +13,18 @@
         <div class="hero-cta">
             <a href="/tools" class="btn btn-primary">Try the Radar</a>
             <a href="/about" class="btn btn-secondary">About the Forge</a>
+        </div>
+    </div>
+</section>
+
+<!-- ================= Market Ticker ================= -->
+<section class="ticker-section">
+    <div class="container">
+        <div class="ticker-wrapper">
+            <span class="ticker-label">📊 MARKET</span>
+            <div class="ticker-track-wrapper">
+                <div id="tickerTrack" class="ticker-track"></div>
+            </div>
         </div>
     </div>
 </section>
@@ -96,6 +102,33 @@
                     <p class="section-sub">Interactive chart showing price action, moving averages, and trading signals for the top trending Pump.fun coin. Auto-updates every 60 seconds.</p>
                 </div>
                 <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">📊 Live Pump.fun Chart</div>
+                        <div class="chart-subtitle">Real-time price action with moving averages and trading signals</div>
+                    </div>
+                    <div id="coinInfoOverlay" class="coin-info-overlay" style="display: none;"></div>
+                    <div id="chartLoading" class="chart-loading">Loading chart data for top Pump.fun coin…</div>
+                    <div id="chartContainer" class="chart-area"></div>
+                    <div id="chartInfo" class="chart-info">
+                        <span id="currentCoin">Loading...</span>
+                        <button id="chartRefreshBtn" class="btn btn-secondary">🔄 Refresh</button>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <!-- ================= 1-min Chart with Moving Averages ================= -->
+        <section class="chart-section">
+            <div class="container">
+                <div class="section-head">
+                    <h2>📈 1-min Chart with 1-min & 5-min Moving Averages</h2>
+                    <p class="section-sub">Interactive chart showing price action, moving averages, and trading signals for the top trending Pump.fun coin. Auto-updates every 60 seconds.</p>
+                </div>
+                <div class="chart-container">
+                    <div class="chart-header">
+                        <div class="chart-title">📊 Live Pump.fun Chart</div>
+                        <div class="chart-subtitle">Real-time price action with moving averages and trading signals</div>
+                    </div>
+                    <div id="coinInfoOverlay" class="coin-info-overlay" style="display: none;"></div>
                     <div id="chartLoading" class="chart-loading">Loading chart data for top Pump.fun coin…</div>
                     <div id="chartContainer" class="chart-area"></div>
                     <div id="chartInfo" class="chart-info">
@@ -128,7 +161,7 @@
         <section class="breaking-news-section">
             <div class="container">
                 <div class="section-head">
-                    <h2>📰 Breaking News</h2>
+                    <h2>� Breaking News</h2>
                     <p class="section-sub">Latest crypto headlines. Updates every 5 minutes.</p>
                 </div>
                 <div class="news-list" id="newsList">
@@ -173,7 +206,7 @@
                 <input type="email" name="email" placeholder="your@email.anon" required>
                 <input type="hidden" name="name" value="">
                 <input type="hidden" name="referred_by" value="">
-                <button type="submit" class="btn btn-primary">Join Now 🔥</button>
+                <button type="submit" class="btn btn-primary">Join Now �</button>
             </form>
             <div id="formMessage" style="margin-top: 1rem;"></div>
         </div>
