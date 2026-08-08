@@ -326,11 +326,16 @@ def chart(symbol):
         data = response.json()
         prices = data.get('prices', [])
         volumes = data.get('total_volumes', [])
-        
+
+        # If no price data, fallback to mock
+        if not prices:
+            log.info("Chart: No price data for %s, serving mock", symbol)
+            return jsonify(_mock_chart_data(symbol))
+
         price_data = []
         for i, p in enumerate(prices):
             price_data.append([p[0], p[1], p[1], p[1], p[1], volumes[i][1] if i < len(volumes) else 0])
-        
+
         return jsonify({
             "price_data": price_data,
             "ma_1m": [],
@@ -338,6 +343,7 @@ def chart(symbol):
             "signals": []
         })
     except Exception as e:
+        log.warning("Chart: CoinGecko fetch failed for %s: %s", symbol, e)
         return jsonify(_mock_chart_data(symbol))
 
 
@@ -412,6 +418,12 @@ def quick_stats():
         response = requests.get(url, timeout=10)
         data = response.json()
         global_data = data.get('data', {})
+
+        # If global data is empty or missing required fields, fallback to mock
+        if not global_data or not global_data.get('total_market_cap') or not global_data.get('total_volume'):
+            log.info("Quick-stats: Incomplete data from CoinGecko, serving mock")
+            return jsonify(_mock_quick_stats_data())
+
         return jsonify({
             "total_market_cap": global_data.get('total_market_cap', {}).get('usd', 0),
             "total_volume": global_data.get('total_volume', {}).get('usd', 0),
@@ -419,12 +431,8 @@ def quick_stats():
             "eth_dominance": global_data.get('market_cap_percentage', {}).get('eth', 0)
         })
     except Exception as e:
-        return jsonify({
-            "total_market_cap": 2140000000000,
-            "total_volume": 85300000000,
-            "btc_dominance": 52.5,
-            "eth_dominance": 18.2
-        })
+        log.warning("Quick-stats: CoinGecko fetch failed: %s", e)
+        return jsonify(_mock_quick_stats_data())
 
 
 # ---------------------------------------------------------------------------
@@ -715,28 +723,35 @@ def ticker():
         }
         response = requests.get(url, params=params, timeout=10)
         data = response.json()
+
+        # Check if we got valid data for all coins
+        btc_data = data.get("bitcoin", {})
+        eth_data = data.get("ethereum", {})
+        sol_data = data.get("solana", {})
+
+        # If any coin data is missing or empty, fallback to mock
+        if not btc_data or not eth_data or not sol_data:
+            log.info("Ticker: Incomplete data from CoinGecko, serving mock")
+            return jsonify(_mock_ticker_data())
+
         return jsonify({
             "btc": {
-                "price": data.get("bitcoin", {}).get("usd", 0),
-                "change_24h": data.get("bitcoin", {}).get("usd_24h_change", 0)
+                "price": btc_data.get("usd", 0),
+                "change_24h": btc_data.get("usd_24h_change", 0)
             },
             "eth": {
-                "price": data.get("ethereum", {}).get("usd", 0),
-                "change_24h": data.get("ethereum", {}).get("usd_24h_change", 0)
+                "price": eth_data.get("usd", 0),
+                "change_24h": eth_data.get("usd_24h_change", 0)
             },
             "sol": {
-                "price": data.get("solana", {}).get("usd", 0),
-                "change_24h": data.get("solana", {}).get("usd_24h_change", 0)
+                "price": sol_data.get("usd", 0),
+                "change_24h": sol_data.get("usd_24h_change", 0)
             },
             "top_gainers": []
         })
     except Exception as e:
-        return jsonify({
-            "btc": {"price": 61234, "change_24h": 2.4},
-            "eth": {"price": 2912, "change_24h": 12.4},
-            "sol": {"price": 143, "change_24h": 0.8},
-            "top_gainers": []
-        })
+        log.warning("Ticker: CoinGecko fetch failed: %s", e)
+        return jsonify(_mock_ticker_data())
 
 
 # ---------------------------------------------------------------------------
