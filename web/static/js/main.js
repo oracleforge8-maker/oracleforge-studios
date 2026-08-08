@@ -624,6 +624,126 @@
             }
         }
 
+        function updateCoinInfoOverlay(token) {
+            const overlay = document.getElementById('coinInfoOverlay');
+            if (!overlay) return;
+
+            if (token) {
+                overlay.innerHTML = `
+                    <h4>🪙 ${token.symbol.toUpperCase()}</h4>
+                    <div class="coin-price">$${token.price.toLocaleString('en-US', {
+                        minimumFractionDigits: 4,
+                        maximumFractionDigits: 8
+                    })}</div>
+                    <div class="coin-stats">
+                        <div>
+                            <div class="stat-label">Momentum</div>
+                            <div class="stat-value">${token.momentum.toFixed(1)}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Market Cap</div>
+                            <div class="stat-value">$${formatMarketCap(token.marketCapUsd)}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Volume</div>
+                            <div class="stat-value">$${formatVolume(token.volumeUsd)}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Launched</div>
+                            <div class="stat-value">${token.launched}</div>
+                        </div>
+                    </div>
+                `;
+                overlay.style.display = 'block';
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function formatMarketCap(mc) {
+            if (mc === null || mc === undefined || isNaN(Number(mc))) return '—';
+            const n = Number(mc);
+            if (!n) return '$0';
+            if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+            if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+            if (n >= 1e3) return '$' + (n / 1e3).toFixed(2) + 'K';
+            return '$' + n.toFixed(0);
+        }
+
+        function formatVolume(vol) {
+            if (vol === null || vol === undefined || isNaN(Number(vol))) return '—';
+            const n = Number(vol);
+            if (!n) return '$0';
+            if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+            if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+            return '$' + n.toFixed(0);
+        }
+        function updateCurrentCoinInfo(token) {
+            if (currentCoinElement) {
+                currentCoinElement.textContent = token ?
+                    `📊 ${token.symbol.toUpperCase()} - $${token.price.toLocaleString('en-US', {
+                        minimumFractionDigits: 4,
+                        maximumFractionDigits: 8
+                    })} | Momentum: ${token.momentum.toFixed(1)}` :
+                    'No data available';
+            }
+        }
+
+        function updateCoinInfoOverlay(token) {
+            const overlay = document.getElementById('coinInfoOverlay');
+            if (!overlay) return;
+
+            if (token) {
+                overlay.innerHTML = `
+                    <h4>🪙 ${token.symbol.toUpperCase()}</h4>
+                    <div class="coin-price">$${token.price.toLocaleString('en-US', {
+                        minimumFractionDigits: 4,
+                        maximumFractionDigits: 8
+                    })}</div>
+                    <div class="coin-stats">
+                        <div>
+                            <div class="stat-label">Momentum</div>
+                            <div class="stat-value">${token.momentum.toFixed(1)}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Market Cap</div>
+                            <div class="stat-value">$${formatMarketCap(token.marketCapUsd)}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Volume</div>
+                            <div class="stat-value">$${formatVolume(token.volumeUsd)}</div>
+                        </div>
+                        <div>
+                            <div class="stat-label">Launched</div>
+                            <div class="stat-value">${token.launched}</div>
+                        </div>
+                    </div>
+                `;
+                overlay.style.display = 'block';
+            } else {
+                overlay.style.display = 'none';
+            }
+        }
+
+        function formatMarketCap(mc) {
+            if (mc === null || mc === undefined || isNaN(Number(mc))) return '—';
+            const n = Number(mc);
+            if (!n) return '$0';
+            if (n >= 1e9) return '$' + (n / 1e9).toFixed(2) + 'B';
+            if (n >= 1e6) return '$' + (n / 1e6).toFixed(2) + 'M';
+            if (n >= 1e3) return '$' + (n / 1e3).toFixed(2) + 'K';
+            return '$' + n.toFixed(0);
+        }
+
+        function formatVolume(vol) {
+            if (vol === null || vol === undefined || isNaN(Number(vol))) return '—';
+            const n = Number(vol);
+            if (!n) return '$0';
+            if (n >= 1e6) return '$' + (n / 1e6).toFixed(1) + 'M';
+            if (n >= 1e3) return '$' + (n / 1e3).toFixed(1) + 'K';
+            return '$' + n.toFixed(0);
+        }
+
         async function loadChart(symbol) {
             showLoading();
 
@@ -647,8 +767,11 @@
                 const timestamps = data.price_data.map(item => new Date(item[0]));
                 const prices = data.price_data.map(item => item[4]); // Close price
                 const volumes = data.price_data.map(item => item[5]); // Volume
-                         const ma1m = data.ma_1m.filter(item => item !== null);
-                         const ma5m = data.ma_5m.filter(item => item !== null);
+
+                // Filter out null values from MAs and align with timestamps
+                const ma1m = data.ma_1m.map((value, index) => value !== null ? value : null);
+                const ma5m = data.ma_5m.map((value, index) => value !== null ? value : null);
+
                 const signals = data.signals || [];
 
                 // Create traces
@@ -659,30 +782,33 @@
                         type: 'scatter',
                         mode: 'lines',
                         name: 'Price',
-                        line: { color: '#1f77b4', width: 2 }
+                        line: { color: '#3E6AE1', width: 2 },
+                        hovertemplate: '<b>Price</b>: $%{y:.4f}<br><b>Time</b>: %{x|%H:%M}<extra></extra>'
                     }
                 ];
 
                 // Add MA traces if data exists
-                if (ma1m.length > 0) {
+                if (ma1m.some(value => value !== null)) {
                     traces.push({
-                        x: timestamps.slice(1), // MA starts after 1 period
+                        x: timestamps,
                         y: ma1m,
                         type: 'scatter',
                         mode: 'lines',
                         name: '1-min MA',
-                        line: { color: '#ff7f0e', dash: 'dash', width: 2 }
+                        line: { color: '#FF7F0E', dash: 'dash', width: 2 },
+                        hovertemplate: '<b>1-min MA</b>: $%{y:.4f}<br><b>Time</b>: %{x|%H:%M}<extra></extra>'
                     });
                 }
 
-                if (ma5m.length > 0) {
+                if (ma5m.some(value => value !== null)) {
                     traces.push({
-                        x: timestamps.slice(5), // MA starts after 5 periods
+                        x: timestamps,
                         y: ma5m,
                         type: 'scatter',
                         mode: 'lines',
                         name: '5-min MA',
-                        line: { color: '#2ca02c', dash: 'dot', width: 2 }
+                        line: { color: '#2CA02C', dash: 'dot', width: 2 },
+                        hovertemplate: '<b>5-min MA</b>: $%{y:.4f}<br><b>Time</b>: %{x|%H:%M}<extra></extra>'
                     });
                 }
 
@@ -692,8 +818,9 @@
                     y: volumes,
                     type: 'bar',
                     name: 'Volume',
-                    marker: { color: '#9467bd', opacity: 0.3 },
-                    yaxis: 'y2'
+                    marker: { color: 'rgba(148, 103, 189, 0.3)' },
+                    yaxis: 'y2',
+                    hovertemplate: '<b>Volume</b>: %{y:,}<br><b>Time</b>: %{x|%H:%M}<extra></extra>'
                 });
 
                 // Add entry/exit signals
@@ -710,9 +837,10 @@
                         marker: {
                             symbol: 'triangle-up',
                             size: 12,
-                            color: '#2ecc71',
-                            line: { color: '#27ae60', width: 2 }
-                        }
+                            color: '#2ECC71',
+                            line: { color: '#27AE60', width: 2 }
+                        },
+                        hovertemplate: '<b>Entry Signal</b>: $%{y:.4f}<extra></extra>'
                     });
                 }
 
@@ -726,55 +854,106 @@
                         marker: {
                             symbol: 'triangle-down',
                             size: 12,
-                            color: '#e74c3c',
-                            line: { color: '#c0392b', width: 2 }
-                        }
+                            color: '#E74C3C',
+                            line: { color: '#C0392B', width: 2 }
+                        },
+                        hovertemplate: '<b>Exit Signal</b>: $%{y:.4f}<extra></extra>'
                     });
                 }
 
-                // Plot layout with dual y-axis
+                // Plot layout with dual y-axis - Modern Dark Theme
                 const layout = {
-                    title: `${symbol.toUpperCase()} Price Chart with Moving Averages & Signals`,
+                    title: {
+                        text: `${symbol.toUpperCase()} Price Chart (Real-Time)`,
+                        font: {
+                            family: "'Inter', sans-serif",
+                            size: 16,
+                            color: '#F0EEE9',
+                            weight: 'bold'
+                        }
+                    },
                     xaxis: {
                         title: 'Time',
                         rangeslider: { visible: false },
                         type: 'date',
-                        gridcolor: 'rgba(0, 0, 0, 0.1)'
+                        gridcolor: 'rgba(255, 255, 255, 0.1)',
+                        zerolinecolor: 'rgba(255, 255, 255, 0.1)',
+                        tickfont: {
+                            color: '#A8A6A2',
+                            size: 12
+                        },
+                        titlefont: {
+                            color: '#F0EEE9',
+                            size: 14
+                        }
                     },
                     yaxis: {
                         title: 'Price (USD)',
                         fixedrange: false,
-                        gridcolor: 'rgba(0, 0, 0, 0.1)',
-                        zerolinecolor: 'rgba(0, 0, 0, 0.1)'
+                        gridcolor: 'rgba(255, 255, 255, 0.1)',
+                        zerolinecolor: 'rgba(255, 255, 255, 0.1)',
+                        tickfont: {
+                            color: '#A8A6A2',
+                            size: 12
+                        },
+                        titlefont: {
+                            color: '#F0EEE9',
+                            size: 14
+                        },
+                        tickformat: '$.4f'
                     },
                     yaxis2: {
                         title: 'Volume',
                         overlaying: 'y',
                         side: 'right',
                         fixedrange: false,
-                        showgrid: false
+                        showgrid: false,
+                        tickfont: {
+                            color: '#A8A6A2',
+                            size: 12
+                        },
+                        titlefont: {
+                            color: '#F0EEE9',
+                            size: 14
+                        }
                     },
                     showlegend: true,
                     legend: {
                         x: 0,
                         y: 1.1,
                         orientation: 'h',
-                        bgcolor: 'rgba(255, 255, 255, 0.9)',
-                        bordercolor: 'rgba(0, 0, 0, 0.1)',
-                        borderwidth: 1
+                        bgcolor: 'rgba(26, 26, 25, 0.8)',
+                        bordercolor: 'rgba(255, 255, 255, 0.2)',
+                        borderwidth: 1,
+                        font: {
+                            color: '#F0EEE9',
+                            size: 12
+                        }
                     },
-                    margin: { t: 50, r: 60, b: 50, l: 60 },
+                    margin: { t: 60, r: 60, b: 60, l: 60 },
                     hovermode: 'closest',
-                    plot_bgcolor: '#f8f9fa',
-                    paper_bgcolor: '#ffffff',
-                    font: { family: "'Inter', sans-serif" }
+                    plot_bgcolor: '#0A0A0A',
+                    paper_bgcolor: '#12102A',
+                    font: {
+                        family: "'Inter', sans-serif",
+                        color: '#C0C0C0'
+                    },
+                    hoverlabel: {
+                        bgcolor: 'rgba(26, 26, 25, 0.9)',
+                        bordercolor: 'rgba(0, 184, 148, 0.7)',
+                        font: {
+                            color: '#F0EEE9',
+                            family: "'Inter', sans-serif"
+                        }
+                    }
                 };
 
                 // Render chart
                 Plotly.newPlot(chartContainer, traces, layout, {
                     responsive: true,
                     displayModeBar: true,
-                    displaylogo: false
+                    displaylogo: false,
+                    modeBarButtonsToRemove: ['pan2d', 'lasso2d', 'select2d']
                 });
 
                 hideLoading();

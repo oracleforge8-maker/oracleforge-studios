@@ -940,27 +940,276 @@ section { margin-bottom: 4rem; }
     .hero-cta { flex-direction: column; align-items: center; }
 }
 
-/* ---------- Chart Styles ---------- */
+/* ---------- Chart Styles - Modern Pump.fun Card Style ---------- */
 
 .chart-container {
-    background: var(--surface);
-    border: var(--glass-border);
-    border-radius: 16px;
-    padding: 1.5rem;
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0;
     margin-bottom: 1rem;
     position: relative;
     overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.chart-container:hover {
+    transform: translateY(-4px);
+}
+
+.chart-header {
+    background: linear-gradient(135deg, rgba(0, 184, 148, 0.1), rgba(217, 74, 74, 0.1));
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--data-green), var(--accent));
+}
+
+.chart-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.chart-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    opacity: 0.8;
 }
 
 .chart-area {
     width: 100%;
     min-height: 500px;
     height: auto;
+    padding: 1rem;
+}
+
+/* Modern Dark Theme Chart Styling */
+.js-plotly-plot {
+    background: transparent !important;
+}
+
+.plot-container {
+    background: transparent !important;
+}
+
+.svg-container {
+    background: transparent !important;
+}
+
+.main-svg {
+    background: transparent !important;
+}
+
+.hovertext text {
+    fill: var(--text-primary) !important;
+    font-family: var(--font-primary) !important;
+}
+
+.hovertext path {
+    stroke: rgba(26, 26, 25, 0.8) !important;
+    fill: rgba(26, 26, 25, 0.9) !important;
+}
+
+.hovertext rect {
+    fill: rgba(26, 26, 25, 0.9) !important;
+    stroke: rgba(0, 184, 148, 0.7) !important;
+}
+
+/* Chart Loading State */
+.chart-loading {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    color: var(--text-secondary);
+    font-size: 1rem;
+    animation: pulse 1.5s infinite;
+}
+
+.chart-loading::before {
+    content: '📊';
+    margin-right: 0.8rem;
+    font-size: 1.2rem;
+}
+
+/* Chart Error State */
+.chart-error {
+    background: rgba(217, 74, 74, 0.05);
+    border: 1px solid rgba(217, 74, 74, 0.2);
+    border-radius: 12px;
+    padding: 1.5rem;
+    text-align: center;
+    color: var(--text-secondary);
+}
+
+.chart-error h3 {
+    color: var(--data-red);
+    margin-bottom: 0.8rem;
+    font-size: 1.2rem;
+}
+
+.chart-error p {
+    margin-bottom: 0.8rem;
+    opacity: 0.9;
+}
+
+/* Chart Refresh Button */
+#chartRefreshBtn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text-primary);
+    padding: 0.6rem 1.2rem;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1rem;
+}
+
+#chartRefreshBtn:hover {
+    background: rgba(255, 255, 255, 0.05);
+    border-color: var(--data-green);
+    transform: translateY(-2px);
+}
+
+#chartRefreshBtn:active {
+    transform: translateY(0);
+}
+
+/* Current Coin Info */
+#currentCoin {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem 1.5rem;
+    margin-bottom: 1rem;
+    font-size: 1rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    font-weight: 600;
+}
+
+#currentCoin::before {
+    content: '📊';
+    font-size: 1.2rem;
+}
+
+/* Chart Legend Styling */
+.legend {
+    background: rgba(26, 26, 25, 0.8) !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    border-radius: 8px !important;
+    padding: 0.5rem 1rem !important;
+}
+
+.legendtext {
+    fill: var(--text-primary) !important;
+    font-family: var(--font-primary) !important;
+    font-size: 12px !important;
+    font-weight: 600 !important;
+}
+
+/* Axis Labels */
+.xtitle, .ytitle {
+    fill: var(--text-primary) !important;
+    font-family: var(--font-primary) !important;
+    font-size: 14px !important;
+    font-weight: 700 !important;
+}
+
+/* Grid Lines */
+.grid-line {
+    stroke: rgba(255, 255, 255, 0.1) !important;
+}
+
+/* Tick Labels */
+.xtick text, .ytick text {
+    fill: var(--text-secondary) !important;
+    font-family: var(--font-primary) !important;
+    font-size: 12px !important;
+}
+
+/* Mode Bar (Chart Controls) */
+.modebar {
+    background: rgba(26, 26, 25, 0.8) !important;
+    border-radius: 8px !important;
+    padding: 0.5rem !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.modebar-btn {
+    color: var(--text-secondary) !important;
+    background: transparent !important;
+    border: none !important;
+    padding: 0.4rem 0.8rem !important;
+    border-radius: 6px !important;
+    transition: all 0.2s !important;
+    font-family: var(--font-primary) !important;
+}
+
+.modebar-btn:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+    color: var(--text-primary) !important;
+}
+
+.modebar-btn:active {
+    background: rgba(0, 184, 148, 0.2) !important;
+}
+
+/* Signal Markers */
+.point {
+    stroke-width: 2 !important;
+}
+
+/* Volume Bars */
+.bar {
+    opacity: 0.3 !important;
+}
+
+/* Responsive Chart */
+@media (max-width: 768px) {
+    .chart-container {
+        border-radius: 16px;
+        margin-bottom: 0.5rem;
+    }
+
+    .chart-area {
+        min-height: 400px;
+    }
+
+    .legend {
+        font-size: 10px !important;
+    }
+
+    .xtick text, .ytick text {
+        font-size: 10px !important;
+    }
 }
 
 .chart-loading {
     text-align: center;
-    padding: 2rem;
+    padding: 3rem;
     color: var(--text-secondary);
     position: absolute;
     top: 50%;
@@ -969,13 +1218,21 @@ section { margin-bottom: 4rem; }
     z-index: 10;
 }
 
+.chart-loading::after {
+    content: '⏳';
+    display: block;
+    font-size: 2rem;
+    margin-top: 1rem;
+    animation: pulse 1.5s infinite;
+}
+
 .chart-info {
+    background: var(--surface);
+    padding: 1.2rem 1.5rem;
+    border-top: 1px solid var(--border);
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-top: 1rem;
-    padding-top: 1rem;
-    border-top: 1px solid var(--border);
     flex-wrap: wrap;
     gap: 1rem;
 }
@@ -984,6 +1241,59 @@ section { margin-bottom: 4rem; }
     color: var(--text-primary);
     font-weight: 600;
     font-size: 0.95rem;
+}
+
+.coin-info-overlay {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: rgba(26, 26, 25, 0.9);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    z-index: 20;
+    max-width: 280px;
+}
+
+.coin-info-overlay h4 {
+    color: var(--data-green);
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.coin-info-overlay .coin-price {
+    color: var(--text-primary);
+    font-size: 1.4rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    margin: 0.3rem 0;
+}
+
+.coin-info-overlay .coin-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+}
+
+.coin-info-overlay .stat-label {
+    color: var(--text-secondary);
+    opacity: 0.75;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.coin-info-overlay .stat-value {
+    color: var(--text-primary);
+    font-weight: 700;
 }
 
 .chart-error {
@@ -999,7 +1309,304 @@ section { margin-bottom: 4rem; }
 
 .chart-error p {
     margin-bottom: 1rem;
+    opacity: 0.9;
+}
+
+/* Plotly-specific styling overrides */
+.plot-container {
+    font-family: var(--font-primary) !important;
+}
+
+.js-plotly-plot .plotly, .js-plotly-plot .plotly div {
+    font-family: var(--font-primary) !important;
+}
+
+.plotly .modebar {
+    background: var(--surface) !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border) !important;
+}
+
+.plotly .modebar-btn {
+    color: var(--text-secondary) !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.plotly .modebar-btn:hover {
+    color: var(--text-primary) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.plotly .modebar-btn:active {
+    color: var(--data-green) !important;
+    background: rgba(0, 184, 148, 0.2) !important;
+}
+
+.plotly .legend {
+    background: rgba(26, 26, 25, 0.8) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.plotly .legendtext {
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+}
+
+.plotly .cartesianlayer {
+    background: transparent !important;
+}
+
+.plotly .xaxis .title, .plotly .yaxis .title {
+    fill: var(--text-secondary) !important;
+    font-weight: 600 !important;
+}
+
+.plotly .xaxis .tick text, .plotly .yaxis .tick text {
+    fill: var(--text-secondary) !important;
+    font-size: 0.8rem !important;
+}
+
+.plotly .grid-layer .grid-line {
+    stroke: var(--border) !important;
+    stroke-opacity: 0.3 !important;
+}
+
+.plotly .zeroline line {
+    stroke: var(--border) !important;
+    stroke-opacity: 0.2 !important;
+}
+/* ---------- Chart Styles - Modern Pump.fun Card Style ---------- */
+
+.chart-container {
+    background: var(--surface-elevated);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 0;
+    margin-bottom: 1rem;
+    position: relative;
+    overflow: hidden;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    transition: transform 0.3s ease;
+}
+
+.chart-container:hover {
+    transform: translateY(-4px);
+}
+
+.chart-header {
+    background: linear-gradient(135deg, rgba(0, 184, 148, 0.1), rgba(217, 74, 74, 0.1));
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-header::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--data-green), var(--accent));
+}
+
+.chart-title {
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+}
+
+.chart-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
     opacity: 0.8;
+}
+
+.chart-area {
+    width: 100%;
+    min-height: 500px;
+    height: auto;
+    padding: 1rem;
+}
+
+.chart-loading {
+    text-align: center;
+    padding: 3rem;
+    color: var(--text-secondary);
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 10;
+}
+
+.chart-loading::after {
+    content: '⏳';
+    display: block;
+    font-size: 2rem;
+    margin-top: 1rem;
+    animation: pulse 1.5s infinite;
+}
+
+.chart-info {
+    background: var(--surface);
+    padding: 1.2rem 1.5rem;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.chart-info span {
+    color: var(--text-primary);
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.coin-info-overlay {
+    position: absolute;
+    top: 1.5rem;
+    right: 1.5rem;
+    background: rgba(26, 26, 25, 0.9);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    z-index: 20;
+    max-width: 280px;
+}
+
+.coin-info-overlay h4 {
+    color: var(--data-green);
+    font-size: 1.1rem;
+    font-weight: 800;
+    margin-bottom: 0.5rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.coin-info-overlay .coin-price {
+    color: var(--text-primary);
+    font-size: 1.4rem;
+    font-weight: 800;
+    font-family: var(--font-mono);
+    margin: 0.3rem 0;
+}
+
+.coin-info-overlay .coin-stats {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-top: 0.8rem;
+    font-size: 0.85rem;
+}
+
+.coin-info-overlay .stat-label {
+    color: var(--text-secondary);
+    opacity: 0.75;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.coin-info-overlay .stat-value {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.chart-error {
+    text-align: center;
+    padding: 2rem;
+    color: var(--data-red);
+}
+
+.chart-error h3 {
+    font-size: 1.2rem;
+    margin-bottom: 0.5rem;
+}
+
+.chart-error p {
+    margin-bottom: 1rem;
+    opacity: 0.9;
+}
+
+/* Plotly-specific styling overrides */
+.plot-container {
+    font-family: var(--font-primary) !important;
+}
+
+.js-plotly-plot .plotly, .js-plotly-plot .plotly div {
+    font-family: var(--font-primary) !important;
+}
+
+.plotly .modebar {
+    background: var(--surface) !important;
+    border-radius: 8px !important;
+    border: 1px solid var(--border) !important;
+}
+
+.plotly .modebar-btn {
+    color: var(--text-secondary) !important;
+    background: transparent !important;
+    border: none !important;
+}
+
+.plotly .modebar-btn:hover {
+    color: var(--text-primary) !important;
+    background: rgba(255, 255, 255, 0.1) !important;
+}
+
+.plotly .modebar-btn:active {
+    color: var(--data-green) !important;
+    background: rgba(0, 184, 148, 0.2) !important;
+}
+
+.plotly .legend {
+    background: rgba(26, 26, 25, 0.8) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 8px !important;
+    backdrop-filter: blur(10px) !important;
+}
+
+.plotly .legendtext {
+    color: var(--text-primary) !important;
+    font-weight: 600 !important;
+}
+
+.plotly .cartesianlayer {
+    background: transparent !important;
+}
+
+.plotly .xaxis .title, .plotly .yaxis .title {
+    fill: var(--text-secondary) !important;
+    font-weight: 600 !important;
+}
+
+.plotly .xaxis .tick text, .plotly .yaxis .tick text {
+    fill: var(--text-secondary) !important;
+    font-size: 0.8rem !important;
+}
+
+.plotly .grid-layer .grid-line {
+    stroke: var(--border) !important;
+    stroke-opacity: 0.3 !important;
+}
+
+.plotly .zeroline line {
+    stroke: var(--border) !important;
+    stroke-opacity: 0.2 !important;
 }
 
 /* Pump.fun chart styles */
