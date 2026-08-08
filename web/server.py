@@ -285,6 +285,34 @@ def _mock_chart_data(coin_id: str) -> Dict[str, Any]:
         "signals": signals
     }
 
+@app.route('/api/chart/<symbol>')
+def chart(symbol):
+    import requests
+    try:
+        url = f"https://api.coingecko.com/api/v3/coins/{symbol}/market_chart"
+        params = {
+            "vs_currency": "usd",
+            "days": 1,
+            "interval": "5m"
+        }
+        response = requests.get(url, params=params, timeout=10)
+        data = response.json()
+        prices = data.get('prices', [])
+        volumes = data.get('total_volumes', [])
+
+        price_data = []
+        for i, p in enumerate(prices):
+            price_data.append([p[0], p[1], p[1], p[1], p[1], volumes[i][1] if i < len(volumes) else 0])
+
+        return jsonify({
+            "price_data": price_data,
+            "ma_1m": [],
+            "ma_5m": [],
+            "signals": []
+        })
+    except Exception as e:
+        return jsonify(_mock_chart_data(symbol))
+
 # ---------------------------------------------------------------------------
 # Quick Stats (CoinGecko /global)
 # ---------------------------------------------------------------------------
