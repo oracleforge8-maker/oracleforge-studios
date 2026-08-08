@@ -689,26 +689,40 @@ def _mock_ticker_data() -> Dict[str, Any]:
     }
 
 
-@app.route("/api/ticker")
-def api_ticker():
-    """Homepage market ticker data (BTC/ETH/SOL + top-3 gainers).
-
-    Uses live CoinGecko data when ``COINGECKO_API_KEY`` is configured;
-    otherwise (and on any API failure) returns branded mock data so the
-    ticker always displays. Refreshed by the frontend every 60 seconds.
-
-    Returns:
-        JSON ticker payload (see module docstring for the schema).
-    """
-    if not config.env("COINGECKO_API_KEY"):
-        log.info("Ticker: no COINGECKO_API_KEY configured — serving mock data")
-        return jsonify(_mock_ticker_data())
-
+@app.route('/api/ticker')
+def ticker():
+    import requests
     try:
-        return jsonify(_coingecko_ticker_data())
-    except Exception as exc:  # noqa: BLE001 — never break the homepage
-        log.warning("Ticker: CoinGecko fetch failed (%s) — serving mock data", exc)
-        return jsonify(_mock_ticker_data())
+        url = "https://api.coingecko.com/api/v3/simple/price"
+        params = {
+            "ids": "bitcoin,ethereum,solana",
+            "vs_currencies": "usd",
+            "include_24hr_change": "true"
+        }
+        response = requests.get(url, params=params, timeout=10)
+        data = response.json()
+        return jsonify({
+            "btc": {
+                "price": data.get("bitcoin", {}).get("usd", 0),
+                "change_24h": data.get("bitcoin", {}).get("usd_24h_change", 0)
+            },
+            "eth": {
+                "price": data.get("ethereum", {}).get("usd", 0),
+                "change_24h": data.get("ethereum", {}).get("usd_24h_change", 0)
+            },
+            "sol": {
+                "price": data.get("solana", {}).get("usd", 0),
+                "change_24h": data.get("solana", {}).get("usd_24h_change", 0)
+            },
+            "top_gainers": []
+        })
+    except Exception as e:
+        return jsonify({
+            "btc": {"price": 61234, "change_24h": 2.4},
+            "eth": {"price": 2912, "change_24h": 12.4},
+            "sol": {"price": 143, "change_24h": 0.8},
+            "top_gainers": []
+        })
 
 
 # ---------------------------------------------------------------------------
