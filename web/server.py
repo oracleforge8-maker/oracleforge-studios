@@ -132,6 +132,31 @@ def waitlist():
 # renders — the same graceful-degradation pattern used by the ticker.
 # Refreshed by the frontend as needed.
 
+#: CoinGecko API v3 base URL
+COINGECKO_BASE = "https://api.coingecko.com/api/v3"
+
+#: Per-request hard timeout (seconds) so a slow CG can never stall the page
+_COINGECKO_TIMEOUT = 10
+
+
+def _coingecko_headers() -> Dict[str, str]:
+    """Build request headers for a CoinGecko call.
+
+    Injects the configured API key (if any). CoinGecko accepts the key via the
+    ``x-cg-pro-api-key`` header (paid plans) or ``x-cg-demo-api-key`` (free/demo)
+    — we send the pro header; demo keys generally work here too. The request
+    is best-effort: the endpoint degrades to mock data on any failure.
+
+    Returns:
+        Headers dict, including the API key header when configured.
+    """
+    headers: Dict[str, str] = {"accept": "application/json"}
+    key = config.env("COINGECKO_API_KEY")
+    if key:
+        headers["x-cg-pro-api-key"] = key
+    return headers
+
+
 def _coingecko_chart_data(coin_id: str, timeframe: str = "1m") -> Dict[str, Any]:
     """Fetch OHLC data from CoinGecko and calculate moving averages.
 
@@ -236,6 +261,7 @@ def _coingecko_chart_data(coin_id: str, timeframe: str = "1m") -> Dict[str, Any]
             "signals": []
         }
 
+
 def _mock_chart_data(coin_id: str) -> Dict[str, Any]:
     """Branded fallback chart data (used without a key or on API failure).
 
@@ -285,6 +311,7 @@ def _mock_chart_data(coin_id: str) -> Dict[str, Any]:
         "signals": signals
     }
 
+
 @app.route('/api/chart/<symbol>')
 def chart(symbol):
     import requests
@@ -299,11 +326,11 @@ def chart(symbol):
         data = response.json()
         prices = data.get('prices', [])
         volumes = data.get('total_volumes', [])
-
+        
         price_data = []
         for i, p in enumerate(prices):
             price_data.append([p[0], p[1], p[1], p[1], p[1], volumes[i][1] if i < len(volumes) else 0])
-
+        
         return jsonify({
             "price_data": price_data,
             "ma_1m": [],
@@ -312,6 +339,7 @@ def chart(symbol):
         })
     except Exception as e:
         return jsonify(_mock_chart_data(symbol))
+
 
 # ---------------------------------------------------------------------------
 # Quick Stats (CoinGecko /global)
@@ -361,6 +389,7 @@ def _coingecko_global_data() -> Dict[str, Any]:
 
     return out
 
+
 def _mock_quick_stats_data() -> Dict[str, Any]:
     """Branded fallback quick stats payload (used without a key or on API failure).
     Returns sample data so the stats always render something meaningful.
@@ -373,6 +402,7 @@ def _mock_quick_stats_data() -> Dict[str, Any]:
         "btc_dominance": 52.5,
         "eth_dominance": 18.2
     }
+
 
 @app.route('/api/quick-stats')
 def quick_stats():
@@ -395,9 +425,7 @@ def quick_stats():
             "btc_dominance": 52.5,
             "eth_dominance": 18.2
         })
-# ---------------------------------------------------------------------------
-# Breaking News ticker (CryptoPanic)
-# ---------------------------------------------------------------------------
+
 
 # ---------------------------------------------------------------------------
 # Breaking News ticker (CryptoPanic)
@@ -422,6 +450,7 @@ CRYPTOPANIC_BASE = "https://cryptopanic.com/api/v1"
 #: Per-request hard timeout (seconds) so a slow CryptoPanic can never stall the page
 _CRYPTOPANIC_TIMEOUT = 10
 
+
 def _cryptopanic_headers() -> Dict[str, str]:
     """Build request headers for a CryptoPanic call.
     Returns:
@@ -432,6 +461,7 @@ def _cryptopanic_headers() -> Dict[str, str]:
     if key:
         headers["Authorization"] = f"Bearer {key}"
     return headers
+
 
 def _cryptopanic_latest_news() -> List[Dict[str, Any]]:
     """Fetch latest crypto news from CryptoPanic /posts/ endpoint.
@@ -463,6 +493,7 @@ def _cryptopanic_latest_news() -> List[Dict[str, Any]]:
         })
     return out
 
+
 def _mock_news_data() -> List[Dict[str, Any]]:
     """Branded fallback news data (used without a key or on API failure).
     Returns sample headlines so the ticker always renders something meaningful.
@@ -479,6 +510,7 @@ def _mock_news_data() -> List[Dict[str, Any]]:
         {"title": "Binance Launches New DeFi Staking Platform with 20% APY", "url": "https://example.com/binance-defi", "source": "CoinDesk"},
         {"title": "Cardano Vasil Hard Fork Successfully Completed, ADA Price Rallies", "url": "https://example.com/cardano-vasil", "source": "CoinTelegraph"}
     ]
+
 
 @app.route("/api/news")
 def api_news():
@@ -499,6 +531,7 @@ def api_news():
     except Exception as exc:  # noqa: BLE001 — never break the homepage
         log.warning("News: CryptoPanic fetch failed (%s) — serving mock data", exc)
         return jsonify({"news": _mock_news_data()})
+
 
 @app.route("/api/trends")
 def api_trends():
@@ -540,9 +573,6 @@ def api_trends():
 # API is unreachable) we fall back to branded mock data so the ticker always
 # renders — the same graceful-degradation pattern used by the Scout.
 
-#: CoinGecko API v3 base URL
-COINGECKO_BASE = "https://api.coingecko.com/api/v3"
-
 #: CoinGecko coin IDs for the major pairs the ticker highlights
 _TICKER_COINS = {
     "btc": "bitcoin",
@@ -555,27 +585,6 @@ _TICKER_GAINERS_LIMIT = 3
 
 #: Number of top gainers surfaced by the dedicated /api/top-gainers table
 _GAINERS_LIMIT = 10
-
-#: Per-request hard timeout (seconds) so a slow CG can never stall the page
-_COINGECKO_TIMEOUT = 10
-
-
-def _coingecko_headers() -> Dict[str, str]:
-    """Build request headers for a CoinGecko call.
-
-    Injects the configured API key (if any). CoinGecko accepts the key via the
-    ``x-cg-pro-api-key`` header (paid plans) or ``x-cg-demo-api-key`` (free/demo)
-    — we send the pro header; demo keys generally work here too. The request
-    is best-effort: the endpoint degrades to mock data on any failure.
-
-    Returns:
-        Headers dict, including the API key header when configured.
-    """
-    headers: Dict[str, str] = {"accept": "application/json"}
-    key = config.env("COINGECKO_API_KEY")
-    if key:
-        headers["x-cg-pro-api-key"] = key
-    return headers
 
 
 def _coingecko_simple_prices() -> Dict[str, Dict[str, float]]:
@@ -728,6 +737,7 @@ def ticker():
             "sol": {"price": 143, "change_24h": 0.8},
             "top_gainers": []
         })
+
 
 # ---------------------------------------------------------------------------
 # Top 10 Gainers table (CoinGecko /coins/markets)
@@ -1235,6 +1245,8 @@ def not_found(_e: Any):
 def server_error(_e: Any):
     """Render a friendly 500 page."""
     return render_template("base.html"), 500
+
+
 # ---------------------------------------------------------------------------
 # Ping endpoints for uptime monitoring and task triggering
 # ---------------------------------------------------------------------------
