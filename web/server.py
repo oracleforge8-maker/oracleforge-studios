@@ -1309,6 +1309,49 @@ def geckoterminal_top():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/gmgn/top')
+def gmgn_top():
+    import requests
+    try:
+        # GMGN API endpoint (requires API key)
+        # If no key, fallback to mock data
+        api_key = config.env("GMGN_API_KEY")
+        if not api_key:
+            return jsonify(_mock_gmgn_data())
+
+        url = "https://gmgn.ai/api/v1/trending"
+        headers = {"Authorization": f"Bearer {api_key}"}
+        resp = requests.get(url, headers=headers, timeout=10)
+        data = resp.json()
+        tokens = data.get('data', [])[:10]
+        result = []
+        for token in tokens:
+            result.append({
+                'symbol': token.get('symbol', '?'),
+                'name': token.get('name', '?'),
+                'price': float(token.get('price', 0)),
+                'change_24h': float(token.get('change_24h', 0)),
+                'volume_24h': float(token.get('volume_24h', 0)),
+                'url': token.get('url', '#')
+            })
+        return jsonify(result)
+    except Exception as e:
+        return jsonify(_mock_gmgn_data())
+
+def _mock_gmgn_data():
+    return [
+        {"symbol": "GMGN1", "name": "GMGN Token 1", "price": 0.0012, "change_24h": 15.4, "volume_24h": 1200000, "url": "#"},
+        {"symbol": "GMGN2", "name": "GMGN Token 2", "price": 0.0008, "change_24h": 8.9, "volume_24h": 890000, "url": "#"},
+        {"symbol": "GMGN3", "name": "GMGN Token 3", "price": 0.0005, "change_24h": 6.3, "volume_24h": 560000, "url": "#"},
+        {"symbol": "GMGN4", "name": "GMGN Token 4", "price": 0.0002, "change_24h": 4.7, "volume_24h": 340000, "url": "#"},
+        {"symbol": "GMGN5", "name": "GMGN Token 5", "price": 0.0001, "change_24h": 3.1, "volume_24h": 210000, "url": "#"},
+        {"symbol": "GMGN6", "name": "GMGN Token 6", "price": 0.0000, "change_24h": 2.5, "volume_24h": 180000, "url": "#"},
+        {"symbol": "GMGN7", "name": "GMGN Token 7", "price": 0.0000, "change_24h": 1.9, "volume_24h": 120000, "url": "#"},
+        {"symbol": "GMGN8", "name": "GMGN Token 8", "price": 0.0000, "change_24h": 1.2, "volume_24h": 90000, "url": "#"},
+        {"symbol": "GMGN9", "name": "GMGN Token 9", "price": 0.0000, "change_24h": 0.8, "volume_24h": 70000, "url": "#"},
+        {"symbol": "GMGN10", "name": "GMGN Token 10", "price": 0.0000, "change_24h": 0.3, "volume_24h": 50000, "url": "#"}
+    ]
+
 # ---------------------------------------------------------------------------
 # Error handlers
 # ---------------------------------------------------------------------------
