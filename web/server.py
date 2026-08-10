@@ -412,27 +412,9 @@ def _mock_quick_stats_data() -> Dict[str, Any]:
 
 @app.route('/api/quick-stats')
 def quick_stats():
-    import requests
-    try:
-        url = "https://api.coingecko.com/api/v3/global"
-        response = requests.get(url, timeout=10)
-        data = response.json()
-        global_data = data.get('data', {})
-
-        # If global data is empty or missing required fields, fallback to mock
-        if not global_data or not global_data.get('total_market_cap') or not global_data.get('total_volume'):
-            log.info("Quick-stats: Incomplete data from CoinGecko, serving mock")
-            return jsonify(_mock_quick_stats_data())
-
-        return jsonify({
-            "total_market_cap": global_data.get('total_market_cap', {}).get('usd', 0),
-            "total_volume": global_data.get('total_volume', {}).get('usd', 0),
-            "btc_dominance": global_data.get('market_cap_percentage', {}).get('btc', 0),
-            "eth_dominance": global_data.get('market_cap_percentage', {}).get('eth', 0)
-        })
-    except Exception as e:
-        log.warning("Quick-stats: CoinGecko fetch failed: %s", e)
-        return jsonify(_mock_quick_stats_data())
+    # CoinGecko API disabled to avoid rate limits
+    # Return mock data immediately
+    return jsonify(_mock_quick_stats_data())
 
 
 # ---------------------------------------------------------------------------
@@ -713,45 +695,9 @@ def _mock_ticker_data() -> Dict[str, Any]:
 
 @app.route('/api/ticker')
 def ticker():
-    import requests
-    try:
-        url = "https://api.coingecko.com/api/v3/simple/price"
-        params = {
-            "ids": "bitcoin,ethereum,solana",
-            "vs_currencies": "usd",
-            "include_24hr_change": "true"
-        }
-        response = requests.get(url, params=params, timeout=10)
-        data = response.json()
-
-        # Check if we got valid data for all coins
-        btc_data = data.get("bitcoin", {})
-        eth_data = data.get("ethereum", {})
-        sol_data = data.get("solana", {})
-
-        # If any coin data is missing or empty, fallback to mock
-        if not btc_data or not eth_data or not sol_data:
-            log.info("Ticker: Incomplete data from CoinGecko, serving mock")
-            return jsonify(_mock_ticker_data())
-
-        return jsonify({
-            "btc": {
-                "price": btc_data.get("usd", 0),
-                "change_24h": btc_data.get("usd_24h_change", 0)
-            },
-            "eth": {
-                "price": eth_data.get("usd", 0),
-                "change_24h": eth_data.get("usd_24h_change", 0)
-            },
-            "sol": {
-                "price": sol_data.get("usd", 0),
-                "change_24h": sol_data.get("usd_24h_change", 0)
-            },
-            "top_gainers": []
-        })
-    except Exception as e:
-        log.warning("Ticker: CoinGecko fetch failed: %s", e)
-        return jsonify(_mock_ticker_data())
+    # CoinGecko API disabled to avoid rate limits
+    # Return mock data immediately
+    return jsonify(_mock_ticker_data())
 
 
 # ---------------------------------------------------------------------------
@@ -883,23 +829,17 @@ def _mock_gainers_data(count: int = _GAINERS_LIMIT) -> List[Dict[str, Any]]:
 def api_top_gainers():
     """Top 10 coins by 30-minute price momentum.
 
-    Uses live CoinGecko data when ``COINGECKO_API_KEY`` is configured;
-    otherwise (and on any API failure) returns branded mock data so the
-    table always displays. Refreshed by the frontend every 60 seconds.
+    CoinGecko API disabled to avoid rate limits.
+    Returns branded mock data so the table always displays.
+    Refreshed by the frontend every 60 seconds.
 
     Returns:
         JSON: a 10-element array of
         {"rank", "symbol", "price", "change_30m", "change_24h"}.
     """
-    if not config.env("COINGECKO_API_KEY"):
-        log.info("Top gainers: no COINGECKO_API_KEY configured — serving mock data")
-        return jsonify(_mock_gainers_data())
-
-    try:
-        return jsonify(_coingecko_top_gainers_table())
-    except Exception as exc:  # noqa: BLE001 — never break the homepage
-        log.warning("Top gainers: CoinGecko fetch failed (%s) — serving mock data", exc)
-        return jsonify(_mock_gainers_data())
+    # CoinGecko API disabled to avoid rate limits
+    # Return mock data immediately
+    return jsonify(_mock_gainers_data())
 
 
 # ---------------------------------------------------------------------------
