@@ -1393,19 +1393,23 @@ setInterval(loadQuickStats, POLL_MS);
                     const tr = document.createElement('tr');
                     const change = coin.change_24h || 0;
                     const color = change >= 0 ? '#00B894' : '#E17055';
+                    const risk = coin.risk_score || { score: 0, risk_level: 'Unknown', emoji: '⚪' };
+                    const riskClass = risk.risk_level.toLowerCase();
+                    const riskHtml = `<span class="risk-badge risk-${riskClass}">${risk.emoji} ${risk.risk_level}</span>`;
                     tr.innerHTML = `
                         <td>${i+1}</td>
                         <td><strong>${coin.symbol}</strong><br><small>${coin.name}</small></td>
                         <td>$${coin.price.toFixed(6)}</td>
                         <td style="color:${color}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</td>
                         <td>$${(coin.volume_24h/1e6).toFixed(2)}M</td>
+                        <td>${riskHtml}</td>
                         <td><a href="${coin.url}" target="_blank" class="buy-btn">Buy</a></td>
                     `;
                     tbody.appendChild(tr);
                 });
             })
             .catch(() => {
-                tbody.innerHTML = '<tr><td colspan="6">Error loading DexScreener data</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7">Error loading DexScreener data</td></tr>';
             });
     }
 
@@ -1424,19 +1428,23 @@ setInterval(loadQuickStats, POLL_MS);
                     const tr = document.createElement('tr');
                     const change = coin.change_24h || 0;
                     const color = change >= 0 ? '#00B894' : '#E17055';
+                    const risk = coin.risk_score || { score: 0, risk_level: 'Unknown', emoji: '⚪' };
+                    const riskClass = risk.risk_level.toLowerCase();
+                    const riskHtml = `<span class="risk-badge risk-${riskClass}">${risk.emoji} ${risk.risk_level}</span>`;
                     tr.innerHTML = `
                         <td>${i+1}</td>
                         <td><strong>${coin.symbol}</strong><br><small>${coin.name}</small></td>
                         <td>$${coin.price.toFixed(6)}</td>
                         <td style="color:${color}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</td>
                         <td>$${(coin.volume_24h/1e6).toFixed(2)}M</td>
+                        <td>${riskHtml}</td>
                         <td><a href="${coin.url}" target="_blank" class="buy-btn">Buy</a></td>
                     `;
                     tbody.appendChild(tr);
                 });
             })
             .catch(() => {
-                tbody.innerHTML = '<tr><td colspan="6">Error loading GeckoTerminal data</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7">Error loading GeckoTerminal data</td></tr>';
             });
     }
 
@@ -1455,19 +1463,23 @@ setInterval(loadQuickStats, POLL_MS);
                     const tr = document.createElement('tr');
                     const change = coin.change_24h || 0;
                     const color = change >= 0 ? '#00B894' : '#E17055';
+                    const risk = coin.risk_score || { score: 0, risk_level: 'Unknown', emoji: '⚪' };
+                    const riskClass = risk.risk_level.toLowerCase();
+                    const riskHtml = `<span class="risk-badge risk-${riskClass}">${risk.emoji} ${risk.risk_level}</span>`;
                     tr.innerHTML = `
                         <td>${i+1}</td>
                         <td><strong>${coin.symbol}</strong><br><small>${coin.name}</small></td>
                         <td>$${coin.price.toFixed(6)}</td>
                         <td style="color:${color}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</td>
                         <td>$${(coin.volume_24h/1e6).toFixed(2)}M</td>
+                        <td>${riskHtml}</td>
                         <td><a href="${coin.url}" target="_blank" class="buy-btn">Buy</a></td>
                     `;
                     tbody.appendChild(tr);
                 });
             })
             .catch(() => {
-                tbody.innerHTML = '<tr><td colspan="6">Error loading GMGN data</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7">Error loading GMGN data</td></tr>';
             });
     }
 
@@ -1487,19 +1499,23 @@ setInterval(loadQuickStats, POLL_MS);
                     const tr = document.createElement('tr');
                     const change = coin.change_24h || 0;
                     const color = change >= 0 ? '#00B894' : '#E17055';
+                    const risk = coin.risk_score || { score: 0, risk_level: 'Unknown', emoji: '⚪' };
+                    const riskClass = risk.risk_level.toLowerCase();
+                    const riskHtml = `<span class="risk-badge risk-${riskClass}">${risk.emoji} ${risk.risk_level}</span>`;
                     tr.innerHTML = `
                         <td>${i+1}</td>
                         <td><strong>${coin.symbol}</strong><br><small>${coin.name}</small></td>
                         <td>$${coin.price.toFixed(6)}</td>
                         <td style="color:${color}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</td>
                         <td>$${(coin.volume_24h/1e6).toFixed(2)}M</td>
+                        <td>${riskHtml}</td>
                         <td><a href="${coin.url}" target="_blank" class="buy-btn">Buy</a></td>
                     `;
                     tbody.appendChild(tr);
                 });
             })
             .catch(() => {
-                tbody.innerHTML = '<tr><td colspan="6">Error loading DEXTools data</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="7">Error loading DEXTools data</td></tr>';
             });
     }
 

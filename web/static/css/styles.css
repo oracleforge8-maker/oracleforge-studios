@@ -260,6 +260,19 @@ section { margin-bottom: 4rem; }
     background: #00A381;
 }
 
+/* ---------- Risk Badges ---------- */
+
+.risk-badge {
+    display: inline-block;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+.risk-low { background: #00B89420; color: #00B894; border: 1px solid #00B89440; }
+.risk-medium { background: #FDCB6E20; color: #FDCB6E; border: 1px solid #FDCB6E40; }
+.risk-high { background: #E1705520; color: #E17055; border: 1px solid #E1705540; }
+
 /* ---------- Hero ---------- */
 
 .hero {
