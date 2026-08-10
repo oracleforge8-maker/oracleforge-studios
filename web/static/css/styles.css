@@ -242,6 +242,24 @@ section { margin-bottom: 4rem; }
 
 .btn-lg { padding: 1.1rem 2.6rem; font-size: 1.1rem; }
 
+/* ---------- Buy Button (used in DexScreener / GeckoTerminal tables) ---------- */
+
+.buy-btn {
+    display: inline-block;
+    padding: 4px 12px;
+    background: #00B894;
+    color: #0A0A0A;
+    border-radius: 4px;
+    font-weight: 600;
+    font-size: 0.75rem;
+    text-decoration: none;
+    transition: background 0.2s;
+}
+
+.buy-btn:hover {
+    background: #00A381;
+}
+
 /* ---------- Hero ---------- */
 
 .hero {
@@ -2647,5 +2665,152 @@ section { margin-bottom: 4rem; }
     .ticker-item {
         font-size: 0.75rem;
         padding-right: 16px;
+    }
+}
+
+/* ============================================================
+   DexScreener & GeckoTerminal Top 10
+   ============================================================ */
+
+.grid-2col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 2rem;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1rem;
+}
+
+.grid-2col > section {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.05);
+}
+
+.dex-grid h2,
+.gecko-grid h2 {
+    text-align: center;
+    font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+.table-wrap {
+    overflow-x: auto;
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    background: var(--card-bg);
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.05);
+}
+
+.dex-table {
+    width: 100%;
+    border-collapse: collapse;
+    min-width: 580px;
+    font-family: var(--font-primary);
+}
+
+.dex-table th,
+.dex-table td {
+    padding: 0.8rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    font-size: 0.9rem;
+}
+
+.dex-table thead th {
+    color: var(--white);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+    font-size: 0.75rem;
+    padding: 0.7rem 1rem;
+}
+
+.dex-table tbody tr:last-child td {
+    border-bottom: none;
+}
+
+.dex-table tbody tr:hover {
+    background: rgba(0, 255, 136, 0.04);
+}
+
+.dex-table .num-col,
+.dex-table td:nth-child(3),
+.dex-table td:nth-child(4),
+.dex-table td:nth-child(5) {
+    text-align: right;
+    font-family: 'JetBrains Mono', monospace;
+}
+
+.dex-table .dex-price {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--data-green);
+    font-weight: 700;
+}
+
+.dex-table .price-up {
+    color: var(--data-green);
+    font-weight: 700;
+}
+
+.dex-table .price-down {
+    color: var(--data-red);
+    font-weight: 700;
+}
+
+.dex-table .buy-btn {
+    display: inline-block;
+    padding: 0.35rem 0.8rem;
+    border-radius: 6px;
+    background: var(--data-green);
+    color: var(--bg);
+    font-weight: 700;
+    font-size: 0.8rem;
+    text-decoration: none;
+    text-align: center;
+    transition: background 0.2s, transform 0.2s;
+    border: none;
+    cursor: pointer;
+    font-family: var(--font-primary);
+}
+
+.dex-table .buy-btn:hover {
+    background: #009d7d;
+    transform: translateY(-1px);
+}
+
+.dex-table tbody td {
+    color: var(--text-secondary);
+}
+
+.dex-table .dex-symbol {
+    font-weight: 800;
+    color: var(--text-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.dex-table .dex-rank {
+    font-weight: 800;
+    color: var(--text-primary);
+}
+
+.dex-table .dex-volume {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-secondary);
+}
+
+@media (max-width: 768px) {
+    .grid-2col {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+        padding: 0 0.5rem;
+    }
+
+    .grid-2col > section {
+        padding: 1.2rem;
     }
 }
