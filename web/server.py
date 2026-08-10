@@ -1231,12 +1231,20 @@ def calculate_risk_score(token_data):
 
 @app.route('/api/dexscreener/top')
 def dexscreener_top():
+    db = _db()
+    stored = db.get_scraped_data('dexscreener')
+    if stored:
+        return jsonify(stored)
     # Scraper disabled (Playwright not available on Render)
     # Return mock data directly
     return jsonify(_mock_dexscreener_data())
 
 @app.route('/api/geckoterminal/top')
 def geckoterminal_top():
+    db = _db()
+    stored = db.get_scraped_data('geckoterminal')
+    if stored:
+        return jsonify(stored)
     try:
         from src.scout.geckoterminal_scraper import scrape_geckoterminal_trending
         data = scrape_geckoterminal_trending()
@@ -1248,6 +1256,10 @@ def geckoterminal_top():
 
 @app.route('/api/gmgn/top')
 def gmgn_top():
+    db = _db()
+    stored = db.get_scraped_data('gmgn')
+    if stored:
+        return jsonify(stored)
     import requests
     try:
         # GMGN API endpoint (requires API key)
@@ -1558,6 +1570,19 @@ def gmgn_live():
         return jsonify(_mock_gmgn_live_data())
     except Exception:
         return jsonify(_mock_gmgn_live_data())
+
+
+@app.route('/api/update/<source>', methods=['POST'])
+def update_scraped_data(source):
+    if not request.is_json:
+        return jsonify({"error": "Invalid JSON"}), 400
+    data = request.get_json()
+    if source not in ['dexscreener', 'geckoterminal', 'gmgn', 'dextools', 'birdeye', 'dexpaprika', 'threews']:
+        return jsonify({"error": "Invalid source"}), 400
+    db = _db()
+    db.save_scraped_data(source, data)
+    log.info(f"Updated {source} data from local bot")
+    return jsonify({"status": "ok", "source": source})
 
 
 @app.errorhandler(404)

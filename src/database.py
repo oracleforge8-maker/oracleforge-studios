@@ -130,12 +130,18 @@ CREATE TABLE IF NOT EXISTS patrons (
     tier_level      INTEGER,                    -- 1 | 2 | 3
     status          TEXT NOT NULL DEFAULT 'active',  -- active | canceled | expired
     joined_at       TEXT,
-    updated_at      TEXT,
+    updated_at       TEXT,
     last_sync       TEXT                        -- last webhook/API sync time
 );
 
 CREATE INDEX IF NOT EXISTS idx_patrons_tier_level ON patrons(tier_level);
 CREATE INDEX IF NOT EXISTS idx_patrons_status ON patrons(status);
+
+CREATE TABLE IF NOT EXISTS scraped_data (
+    source          TEXT PRIMARY KEY,
+    data            TEXT NOT NULL,
+    updated_at      TIMESTAMP
+);
 """
 
 
@@ -679,6 +685,36 @@ class Database:
         return self.query_one(
             "SELECT * FROM patrons WHERE patreon_id = ?", (patreon_id,)
         )
+
+    # -- scraped data -----------------------------------------------------------
+
+    def save_scraped_data(self, source: str, data: Any) -> None:
+        """Save or replace scraped data for a given source.
+
+        Args:
+            source: Data source name (e.g. "dexscreener", "geckoterminal").
+            data: Python object to serialize as JSON.
+        """
+        import json
+        self.execute(
+            "INSERT OR REPLACE INTO scraped_data (source, data, updated_at) VALUES (?, ?, datetime('now'))",
+            (source, json.dumps(data)),
+        )
+
+    def get_scraped_data(self, source: str) -> Optional[Any]:
+        """Load scraped data for a given source.
+
+        Args:
+            source: Data source name.
+
+        Returns:
+            Deserialized Python object, or None if not found.
+        """
+        import json
+        row = self.query_one("SELECT data FROM scraped_data WHERE source = ?", (source,))
+        if row:
+            return json.loads(row["data"])
+        return None
 
     def list_patrons(self, limit: int = 100, status: Optional[str] = None) -> List[Dict[str, Any]]:
         """Fetch patrons, optionally filtered by status.
