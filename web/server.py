@@ -1247,6 +1247,43 @@ def _post_title(post: Dict[str, Any]) -> str:
 
 
 # ---------------------------------------------------------------------------
+# DexScreener Top 10 trending pairs
+# ---------------------------------------------------------------------------
+# Public schema (returned by /api/dexscreener/top): a JSON array of 10 pairs:
+#     [
+#         {"symbol": "PEPE", "name": "Pepe", "price": 0.0000142,
+#          "change_24h": 12.4, "volume_24h": 850000, "liquidity": 1200000,
+#          "url": "https://dexscreener.com/ethereum/0x..."},
+#     ]
+#
+# Live data is pulled from the DexScreener search endpoint (no API key
+# required). On any upstream failure the route returns a JSON error so the
+# frontend can degrade gracefully. Refreshed by the frontend as needed.
+
+@app.route('/api/dexscreener/top')
+def dexscreener_top():
+    import requests
+    try:
+        url = "https://api.dexscreener.com/latest/dex/search?q=trending"
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+        pairs = data.get('pairs', [])[:10]
+        result = []
+        for pair in pairs:
+            result.append({
+                'symbol': pair.get('baseToken', {}).get('symbol', '?'),
+                'name': pair.get('baseToken', {}).get('name', '?'),
+                'price': float(pair.get('priceUsd', 0)),
+                'change_24h': float(pair.get('priceChange', {}).get('h24', 0)),
+                'volume_24h': float(pair.get('volume', {}).get('h24', 0)),
+                'liquidity': float(pair.get('liquidity', {}).get('usd', 0)),
+                'url': pair.get('url', '#')
+            })
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+# ---------------------------------------------------------------------------
 # Error handlers
 # ---------------------------------------------------------------------------
 
