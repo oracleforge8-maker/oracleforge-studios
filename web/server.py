@@ -1577,12 +1577,15 @@ def update_scraped_data(source):
     if not request.is_json:
         return jsonify({"error": "Invalid JSON"}), 400
     data = request.get_json()
+    log.info(f"Received {len(data)} items for source {source}")
+    if data and len(data) > 0:
+        log.info(f"First item sample: {data[0]}")
     if source not in ['dexscreener', 'geckoterminal', 'gmgn', 'dextools', 'birdeye', 'dexpaprika', 'threews']:
         return jsonify({"error": "Invalid source"}), 400
     db = _db()
     db.save_scraped_data(source, data)
     log.info(f"Updated {source} data from local bot")
-    return jsonify({"status": "ok", "source": source})
+    return jsonify({"status": "ok", "source": source, "count": len(data)})
 
 
 @app.errorhandler(404)
