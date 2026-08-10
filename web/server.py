@@ -1283,6 +1283,32 @@ def dexscreener_top():
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
+@app.route('/api/geckoterminal/top')
+def geckoterminal_top():
+    import requests
+    try:
+        url = "https://api.geckoterminal.com/api/v2/networks/solana/tokens?include=top_pools&limit=10"
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+        tokens = data.get('data', [])
+        result = []
+        for token in tokens:
+            attrs = token.get('attributes', {})
+            price = float(attrs.get('price_usd', 0))
+            change = float(attrs.get('price_change_percentage_24h', 0))
+            volume = float(attrs.get('volume_usd', {}).get('h24', 0))
+            result.append({
+                'symbol': attrs.get('symbol', '?'),
+                'name': attrs.get('name', '?'),
+                'price': price,
+                'change_24h': change,
+                'volume_24h': volume,
+                'url': f"https://www.geckoterminal.com/solana/tokens/{attrs.get('address', '')}"
+            })
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # ---------------------------------------------------------------------------
 # Error handlers
 # ---------------------------------------------------------------------------
