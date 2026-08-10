@@ -1385,7 +1385,7 @@ setInterval(loadQuickStats, POLL_MS);
     function loadDexScreener() {
         const tbody = document.getElementById('dexBody');
         if (!tbody) return;
-        fetch('/api/dexscreener/top')
+        fetch('/api/dexscreener/live')
             .then(r => r.json())
             .then(data => {
                 tbody.innerHTML = '';
@@ -1455,7 +1455,7 @@ setInterval(loadQuickStats, POLL_MS);
     function loadGmgn() {
         const tbody = document.getElementById('gmgnBody');
         if (!tbody) return;
-        fetch('/api/gmgn/top')
+        fetch('/api/gmgn/live')
             .then(r => r.json())
             .then(data => {
                 tbody.innerHTML = '';
