@@ -1440,9 +1440,42 @@ setInterval(loadQuickStats, POLL_MS);
             });
     }
 
-    // Load both on page load and every 60 seconds
+    // ---------- GMGN Top 10 ----------
+    // Homepage table of top tokens from GMGN.
+    // Polls /api/gmgn/top every 60s and renders the results into the
+    // GMGN table body. Same layout as the DexScreener and GeckoTerminal tables.
+    function loadGmgn() {
+        const tbody = document.getElementById('gmgnBody');
+        if (!tbody) return;
+        fetch('/api/gmgn/top')
+            .then(r => r.json())
+            .then(data => {
+                tbody.innerHTML = '';
+                data.forEach((coin, i) => {
+                    const tr = document.createElement('tr');
+                    const change = coin.change_24h || 0;
+                    const color = change >= 0 ? '#00B894' : '#E17055';
+                    tr.innerHTML = `
+                        <td>${i+1}</td>
+                        <td><strong>${coin.symbol}</strong><br><small>${coin.name}</small></td>
+                        <td>$${coin.price.toFixed(6)}</td>
+                        <td style="color:${color}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</td>
+                        <td>$${(coin.volume_24h/1e6).toFixed(2)}M</td>
+                        <td><a href="${coin.url}" target="_blank" class="buy-btn">Buy</a></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(() => {
+                tbody.innerHTML = '<tr><td colspan="6">Error loading GMGN data</td></tr>';
+            });
+    }
+
+    // Load all three tables on page load and every 60 seconds
     loadDexScreener();
     loadGeckoTerminal();
+    loadGmgn();
     setInterval(loadDexScreener, 60000);
     setInterval(loadGeckoTerminal, 60000);
+    setInterval(loadGmgn, 60000);
 })();

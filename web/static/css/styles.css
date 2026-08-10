@@ -2814,3 +2814,33 @@ section { margin-bottom: 4rem; }
         padding: 1.2rem;
     }
 }
+
+/* ============================================================
+   GMGN Top 10 — full-width card below the DexScreener /
+   GeckoTerminal two-column grid. Same card styling as
+   .grid-2col > section, but with its own max-width + centering
+   since it sits outside the grid wrapper.
+   ============================================================ */
+
+.gmgn-grid {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.05);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.gmgn-grid h2 {
+    text-align: center;
+    font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+    .gmgn-grid {
+        padding: 1.2rem;
+    }
+}
