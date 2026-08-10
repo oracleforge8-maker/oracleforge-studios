@@ -2844,3 +2844,33 @@ section { margin-bottom: 4rem; }
         padding: 1.2rem;
     }
 }
+
+/* ============================================================
+   DEXTools Top 10 — full-width card below the GMGN card.
+   Matches the .gmgn-grid card styling (same background, border,
+   border-radius, padding, shadow and max-width) so all four
+   Trending / Top-10 tables share a consistent look.
+   ============================================================ */
+
+.dextools-grid {
+    background: var(--card-bg);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 1.5rem;
+    box-shadow: 0 0 20px rgba(0, 255, 136, 0.05);
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.dextools-grid h2 {
+    text-align: center;
+    font-size: clamp(1.3rem, 2.5vw, 1.8rem);
+    margin-bottom: 1.5rem;
+    color: var(--text-primary);
+}
+
+@media (max-width: 768px) {
+    .dextools-grid {
+        padding: 1.2rem;
+    }
+}

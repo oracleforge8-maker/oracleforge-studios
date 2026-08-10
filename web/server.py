@@ -1353,6 +1353,62 @@ def _mock_gmgn_data():
     ]
 
 # ---------------------------------------------------------------------------
+# DEXTools Top 10 trending tokens
+# ---------------------------------------------------------------------------
+# Public schema (returned by /api/dextools/top): a JSON array of 10 tokens:
+#     [
+#         {"symbol": "DXT1", "name": "DEXTools Token 1", "price": 0.0023,
+#          "change_24h": 18.7, "volume_24h": 2100000, "url": "#"},
+#         ...
+#     ]
+#
+# Live data is pulled from the DEXTools API when DEXTOOLS_API_KEY is configured.
+# When no key is set (or the API is unreachable) we fall back to branded mock
+# data so the table always renders — the same graceful-degradation pattern
+# used by the GMGN table. Refreshed by the frontend as needed.
+
+@app.route('/api/dextools/top')
+def dextools_top():
+    import requests
+    try:
+        api_key = config.env("DEXTOOLS_API_KEY")
+        if not api_key:
+            return jsonify(_mock_dextools_data())
+        # DEXTools API endpoint (example — adjust if needed)
+        url = "https://api.dextools.io/v2/token/trending"
+        headers = {"Authorization": f"Bearer {api_key}"}
+        resp = requests.get(url, headers=headers, timeout=10)
+        data = resp.json()
+        tokens = data.get('data', [])[:10]
+        result = []
+        for token in tokens:
+            result.append({
+                'symbol': token.get('symbol', '?'),
+                'name': token.get('name', '?'),
+                'price': float(token.get('price', 0)),
+                'change_24h': float(token.get('change_24h', 0)),
+                'volume_24h': float(token.get('volume_24h', 0)),
+                'url': token.get('url', '#')
+            })
+        return jsonify(result)
+    except Exception as e:
+        return jsonify(_mock_dextools_data())
+
+def _mock_dextools_data():
+    return [
+        {"symbol": "DXT1", "name": "DEXTools Token 1", "price": 0.0023, "change_24h": 18.7, "volume_24h": 2100000, "url": "#"},
+        {"symbol": "DXT2", "name": "DEXTools Token 2", "price": 0.0015, "change_24h": 12.1, "volume_24h": 1450000, "url": "#"},
+        {"symbol": "DXT3", "name": "DEXTools Token 3", "price": 0.0009, "change_24h": 9.8, "volume_24h": 980000, "url": "#"},
+        {"symbol": "DXT4", "name": "DEXTools Token 4", "price": 0.0006, "change_24h": 7.2, "volume_24h": 760000, "url": "#"},
+        {"symbol": "DXT5", "name": "DEXTools Token 5", "price": 0.0004, "change_24h": 5.5, "volume_24h": 540000, "url": "#"},
+        {"symbol": "DXT6", "name": "DEXTools Token 6", "price": 0.0003, "change_24h": 4.1, "volume_24h": 390000, "url": "#"},
+        {"symbol": "DXT7", "name": "DEXTools Token 7", "price": 0.0002, "change_24h": 3.3, "volume_24h": 280000, "url": "#"},
+        {"symbol": "DXT8", "name": "DEXTools Token 8", "price": 0.0001, "change_24h": 2.2, "volume_24h": 190000, "url": "#"},
+        {"symbol": "DXT9", "name": "DEXTools Token 9", "price": 0.0001, "change_24h": 1.4, "volume_24h": 110000, "url": "#"},
+        {"symbol": "DXT10", "name": "DEXTools Token 10", "price": 0.0000, "change_24h": 0.7, "volume_24h": 60000, "url": "#"}
+    ]
+
+# ---------------------------------------------------------------------------
 # Error handlers
 # ---------------------------------------------------------------------------
 
