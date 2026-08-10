@@ -1231,19 +1231,8 @@ def calculate_risk_score(token_data):
 
 @app.route('/api/dexscreener/top')
 def dexscreener_top():
-    try:
-        from src.scout.dexscreener_scraper import scrape_dexscreener_trending
-        data = scrape_dexscreener_trending()
-        if data and len(data) > 0:
-            # Ensure each coin has a risk_score
-            for coin in data:
-                if 'risk_score' not in coin:
-                    coin['risk_score'] = {'score': 50, 'risk_level': 'Medium', 'emoji': '🟡'}
-            return jsonify(data)
-    except Exception as e:
-        # Log the error but never return a 500
-        log.warning("DexScreener scraper failed: %s", e)
-    # Fallback to mock data
+    # Scraper disabled (Playwright not available on Render)
+    # Return mock data directly
     return jsonify(_mock_dexscreener_data())
 
 @app.route('/api/geckoterminal/top')
