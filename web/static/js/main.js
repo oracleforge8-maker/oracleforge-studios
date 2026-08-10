@@ -1555,15 +1555,89 @@ setInterval(loadQuickStats, POLL_MS);
             });
     }
 
-    // Load all five tables on page load and every 60 seconds
+    // ---------- DexPaprika Top 10 ----------
+    // Homepage table of top trending tokens from DexPaprika.
+    // Polls /api/dexpaprika/top every 60s and renders the results into the
+    // DexPaprika table body. Same layout as the other Top 10 tables.
+    function loadDexpaprika() {
+        const tbody = document.getElementById('dexpaprikaBody');
+        if (!tbody) return;
+        fetch('/api/dexpaprika/top')
+            .then(r => r.json())
+            .then(data => {
+                tbody.innerHTML = '';
+                data.forEach((coin, i) => {
+                    const tr = document.createElement('tr');
+                    const change = coin.change_24h || 0;
+                    const color = change >= 0 ? '#00B894' : '#E17055';
+                    const risk = coin.risk_score || { score: 0, risk_level: 'Unknown', emoji: '⚪' };
+                    const riskClass = risk.risk_level.toLowerCase();
+                    const riskHtml = `<span class="risk-badge risk-${riskClass}">${risk.emoji} ${risk.risk_level}</span>`;
+                    tr.innerHTML = `
+                        <td>${i+1}</td>
+                        <td><strong>${coin.symbol}</strong><br><small>${coin.name}</small></td>
+                        <td>$${coin.price.toFixed(6)}</td>
+                        <td style="color:${color}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</td>
+                        <td>$${(coin.volume_24h/1e6).toFixed(2)}M</td>
+                        <td>${riskHtml}</td>
+                        <td><a href="${coin.url}" target="_blank" class="buy-btn">Buy</a></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(() => {
+                tbody.innerHTML = '<tr><td colspan="7">Error loading DexPaprika data</td></tr>';
+            });
+    }
+
+    // ---------- three.ws Top 10 ----------
+    // Homepage table of top trending tokens from three.ws.
+    // Polls /api/threews/top every 60s and renders the results into the
+    // three.ws table body. Same layout as the other Top 10 tables.
+    function loadThreews() {
+        const tbody = document.getElementById('threewsBody');
+        if (!tbody) return;
+        fetch('/api/threews/top')
+            .then(r => r.json())
+            .then(data => {
+                tbody.innerHTML = '';
+                data.forEach((coin, i) => {
+                    const tr = document.createElement('tr');
+                    const change = coin.change_24h || 0;
+                    const color = change >= 0 ? '#00B894' : '#E17055';
+                    const risk = coin.risk_score || { score: 0, risk_level: 'Unknown', emoji: '⚪' };
+                    const riskClass = risk.risk_level.toLowerCase();
+                    const riskHtml = `<span class="risk-badge risk-${riskClass}">${risk.emoji} ${risk.risk_level}</span>`;
+                    tr.innerHTML = `
+                        <td>${i+1}</td>
+                        <td><strong>${coin.symbol}</strong><br><small>${coin.name}</small></td>
+                        <td>$${coin.price.toFixed(6)}</td>
+                        <td style="color:${color}">${change >= 0 ? '+' : ''}${change.toFixed(2)}%</td>
+                        <td>$${(coin.volume_24h/1e6).toFixed(2)}M</td>
+                        <td>${riskHtml}</td>
+                        <td><a href="${coin.url}" target="_blank" class="buy-btn">Buy</a></td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            })
+            .catch(() => {
+                tbody.innerHTML = '<tr><td colspan="7">Error loading three.ws data</td></tr>';
+            });
+    }
+
+    // Load all seven tables on page load and every 60 seconds
     loadDexScreener();
     loadGeckoTerminal();
     loadGmgn();
     loadDextools();
     loadBirdeye();
+    loadDexpaprika();
+    loadThreews();
     setInterval(loadDexScreener, 60000);
     setInterval(loadGeckoTerminal, 60000);
     setInterval(loadGmgn, 60000);
     setInterval(loadDextools, 60000);
     setInterval(loadBirdeye, 60000);
+    setInterval(loadDexpaprika, 60000);
+    setInterval(loadThreews, 60000);
 })();

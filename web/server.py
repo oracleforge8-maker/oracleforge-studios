@@ -1481,6 +1481,82 @@ def _mock_birdeye_data():
         {"symbol": "BIRDEYE10", "name": "Birdeye Token 10", "price": 0.0001, "change_24h": 1.4, "volume_24h": 180000, "url": "#"}
     ]
 
+@app.route('/api/dexpaprika/top')
+def dexpaprika_top():
+    import requests
+    try:
+        url = "https://api.dexpaprika.com/v1/tokens/trending"
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+        tokens = data.get('data', [])[:10]
+        result = []
+        for token in tokens:
+            result.append({
+                'symbol': token.get('symbol', '?'),
+                'name': token.get('name', '?'),
+                'price': float(token.get('price_usd', 0)),
+                'change_24h': float(token.get('price_change_24h', 0)),
+                'volume_24h': float(token.get('volume_24h_usd', 0)),
+                'url': token.get('url', '#')
+            })
+        return jsonify(result)
+    except Exception:
+        return jsonify(_mock_dexpaprika_data())
+
+
+def _mock_dexpaprika_data():
+    return [
+        {"symbol": "DPX1", "name": "DexPaprika Token 1", "price": 0.0034, "change_24h": 18.5, "volume_24h": 2800000, "url": "#"},
+        {"symbol": "DPX2", "name": "DexPaprika Token 2", "price": 0.0022, "change_24h": 14.1, "volume_24h": 2200000, "url": "#"},
+        {"symbol": "DPX3", "name": "DexPaprika Token 3", "price": 0.0017, "change_24h": 10.8, "volume_24h": 1800000, "url": "#"},
+        {"symbol": "DPX4", "name": "DexPaprika Token 4", "price": 0.0011, "change_24h": 8.3, "volume_24h": 1400000, "url": "#"},
+        {"symbol": "DPX5", "name": "DexPaprika Token 5", "price": 0.0008, "change_24h": 6.5, "volume_24h": 1100000, "url": "#"},
+        {"symbol": "DPX6", "name": "DexPaprika Token 6", "price": 0.0005, "change_24h": 4.7, "volume_24h": 890000, "url": "#"},
+        {"symbol": "DPX7", "name": "DexPaprika Token 7", "price": 0.0003, "change_24h": 3.2, "volume_24h": 670000, "url": "#"},
+        {"symbol": "DPX8", "name": "DexPaprika Token 8", "price": 0.0002, "change_24h": 2.1, "volume_24h": 480000, "url": "#"},
+        {"symbol": "DPX9", "name": "DexPaprika Token 9", "price": 0.0001, "change_24h": 1.3, "volume_24h": 320000, "url": "#"},
+        {"symbol": "DPX10", "name": "DexPaprika Token 10", "price": 0.0000, "change_24h": 0.6, "volume_24h": 210000, "url": "#"}
+    ]
+
+
+@app.route('/api/threews/top')
+def threews_top():
+    import requests
+    try:
+        url = "https://three.ws/api/crypto/trending?window=1h"
+        resp = requests.get(url, timeout=10)
+        data = resp.json()
+        tokens = data.get('tokens', [])[:10]
+        result = []
+        for token in tokens:
+            result.append({
+                'symbol': token.get('symbol', '?'),
+                'name': token.get('name', '?'),
+                'price': float(token.get('price', 0)),
+                'change_24h': float(token.get('change_24h', 0)),
+                'volume_24h': float(token.get('volume_24h', 0)),
+                'url': token.get('url', '#')
+            })
+        return jsonify(result)
+    except Exception:
+        return jsonify(_mock_threews_data())
+
+
+def _mock_threews_data():
+    return [
+        {"symbol": "TWS1", "name": "three.ws Token 1", "price": 0.0021, "change_24h": 14.2, "volume_24h": 1900000, "url": "#"},
+        {"symbol": "TWS2", "name": "three.ws Token 2", "price": 0.0015, "change_24h": 11.6, "volume_24h": 1500000, "url": "#"},
+        {"symbol": "TWS3", "name": "three.ws Token 3", "price": 0.0010, "change_24h": 8.9, "volume_24h": 1200000, "url": "#"},
+        {"symbol": "TWS4", "name": "three.ws Token 4", "price": 0.0007, "change_24h": 7.2, "volume_24h": 980000, "url": "#"},
+        {"symbol": "TWS5", "name": "three.ws Token 5", "price": 0.0005, "change_24h": 5.8, "volume_24h": 760000, "url": "#"},
+        {"symbol": "TWS6", "name": "three.ws Token 6", "price": 0.0003, "change_24h": 4.3, "volume_24h": 580000, "url": "#"},
+        {"symbol": "TWS7", "name": "three.ws Token 7", "price": 0.0002, "change_24h": 3.0, "volume_24h": 420000, "url": "#"},
+        {"symbol": "TWS8", "name": "three.ws Token 8", "price": 0.0001, "change_24h": 1.8, "volume_24h": 310000, "url": "#"},
+        {"symbol": "TWS9", "name": "three.ws Token 9", "price": 0.0001, "change_24h": 1.0, "volume_24h": 220000, "url": "#"},
+        {"symbol": "TWS10", "name": "three.ws Token 10", "price": 0.0000, "change_24h": 0.5, "volume_24h": 150000, "url": "#"}
+    ]
+
+
 # ---------------------------------------------------------------------------
 # Error handlers
 # ---------------------------------------------------------------------------
