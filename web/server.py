@@ -1597,6 +1597,14 @@ def dexscreener_live():
         from src.scout.dexscreener_scraper import scrape_dexscreener_trending
         data = scrape_dexscreener_trending()
         if data:
+            # Ensure each coin has risk_score
+            for coin in data:
+                if 'risk_score' not in coin:
+                    coin['risk_score'] = {
+                        'score': 50,
+                        'risk_level': 'Medium',
+                        'emoji': '🟡'
+                    }
             return jsonify(data)
         return jsonify(_mock_dexscreener_data())
     except Exception:
