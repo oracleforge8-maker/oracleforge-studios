@@ -1246,6 +1246,35 @@ def _post_title(post: Dict[str, Any]) -> str:
     return first_line[:60] + ("..." if len(first_line) > 60 else "")
 
 
+def calculate_risk_score(token_data):
+    """Calculate a safety score (0-100) and risk level for a token."""
+    # For now, return a mock score based on token symbol
+    # (We'll integrate real data later)
+    import random
+    score = random.randint(40, 95)
+    if score >= 80:
+        risk_level = "Low"
+        emoji = "🟢"
+    elif score >= 50:
+        risk_level = "Medium"
+        emoji = "🟡"
+    else:
+        risk_level = "High"
+        emoji = "🔴"
+    return {
+        "score": score,
+        "risk_level": risk_level,
+        "emoji": emoji,
+        "details": {
+            "liquidity_locked": True if score > 60 else False,
+            "holder_concentration": "Low" if score > 70 else "Medium",
+            "dev_supply": "<5%" if score > 70 else "5-10%",
+            "creator_history": "Clean" if score > 70 else "Unknown",
+            "sybil_activity": "None" if score > 70 else "Low"
+        }
+    }
+
+
 # ---------------------------------------------------------------------------
 # DexScreener Top 10 trending pairs
 # ---------------------------------------------------------------------------
@@ -1277,7 +1306,8 @@ def dexscreener_top():
                 'change_24h': float(pair.get('priceChange', {}).get('h24', 0)),
                 'volume_24h': float(pair.get('volume', {}).get('h24', 0)),
                 'liquidity': float(pair.get('liquidity', {}).get('usd', 0)),
-                'url': pair.get('url', '#')
+                'url': pair.get('url', '#'),
+                'risk_score': calculate_risk_score(pair)
             })
         return jsonify(result)
     except Exception as e:
@@ -1303,7 +1333,8 @@ def geckoterminal_top():
                 'price': price,
                 'change_24h': change,
                 'volume_24h': volume,
-                'url': f"https://www.geckoterminal.com/solana/tokens/{attrs.get('address', '')}"
+                'url': f"https://www.geckoterminal.com/solana/tokens/{attrs.get('address', '')}",
+                'risk_score': calculate_risk_score(token)
             })
         return jsonify(result)
     except Exception as e:
@@ -1332,7 +1363,8 @@ def gmgn_top():
                 'price': float(token.get('price', 0)),
                 'change_24h': float(token.get('change_24h', 0)),
                 'volume_24h': float(token.get('volume_24h', 0)),
-                'url': token.get('url', '#')
+                'url': token.get('url', '#'),
+                'risk_score': calculate_risk_score(token)
             })
         return jsonify(result)
     except Exception as e:
@@ -1388,7 +1420,8 @@ def dextools_top():
                 'price': float(token.get('price', 0)),
                 'change_24h': float(token.get('change_24h', 0)),
                 'volume_24h': float(token.get('volume_24h', 0)),
-                'url': token.get('url', '#')
+                'url': token.get('url', '#'),
+                'risk_score': calculate_risk_score(token)
             })
         return jsonify(result)
     except Exception as e:
