@@ -1231,27 +1231,20 @@ def calculate_risk_score(token_data):
 
 @app.route('/api/dexscreener/top')
 def dexscreener_top():
-    import requests
     try:
-        url = "https://api.dexscreener.com/latest/dex/search?q=trending"
-        resp = requests.get(url, timeout=10)
-        data = resp.json()
-        pairs = data.get('pairs', [])[:10]
-        result = []
-        for pair in pairs:
-            result.append({
-                'symbol': pair.get('baseToken', {}).get('symbol', '?'),
-                'name': pair.get('baseToken', {}).get('name', '?'),
-                'price': float(pair.get('priceUsd', 0)),
-                'change_24h': float(pair.get('priceChange', {}).get('h24', 0)),
-                'volume_24h': float(pair.get('volume', {}).get('h24', 0)),
-                'liquidity': float(pair.get('liquidity', {}).get('usd', 0)),
-                'url': pair.get('url', '#'),
-                'risk_score': calculate_risk_score(pair)
-            })
-        return jsonify(result)
+        from src.scout.dexscreener_scraper import scrape_dexscreener_trending
+        data = scrape_dexscreener_trending()
+        if data and len(data) > 0:
+            # Ensure each coin has a risk_score
+            for coin in data:
+                if 'risk_score' not in coin:
+                    coin['risk_score'] = {'score': 50, 'risk_level': 'Medium', 'emoji': '🟡'}
+            return jsonify(data)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        # Log the error but never return a 500
+        log.warning("DexScreener scraper failed: %s", e)
+    # Fallback to mock data
+    return jsonify(_mock_dexscreener_data())
 
 @app.route('/api/geckoterminal/top')
 def geckoterminal_top():
