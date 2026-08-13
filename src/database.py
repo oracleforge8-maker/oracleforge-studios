@@ -774,7 +774,9 @@ class Database:
     def close(self) -> None:
         """Close the underlying connection."""
         with self._lock:
-            self.conn.close()
+            if self.conn:
+                self.conn.close()
+                self.conn = None
 
 
 # ---------------------------------------------------------------------------
@@ -800,7 +802,7 @@ def get_db() -> Database:
         Database instance.
     """
     global _DB
-    if _DB is None:
+    if _DB is None or _DB.conn is None:
         _DB = Database()
     return _DB
 
