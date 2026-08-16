@@ -38,3 +38,10 @@ APScheduler>=3.10.4
 # --- Testing ---
 pytest>=8.3.2
 pytest-asyncio>=0.23.8
+
+# --- Browser automation (scraping) ---
+playwright>=1.40.0
+
+# --- Cloudscraper and BeautifulSoup ---
+cloudscraper>=0.9.0
+beautifulsoup4>=4.12.0

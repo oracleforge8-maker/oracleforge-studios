@@ -1,0 +1,1 @@
+# Scout module for data scraping
